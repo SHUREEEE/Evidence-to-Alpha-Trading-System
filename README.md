@@ -16,12 +16,12 @@ Python 3.11+ is required. Core demo and read-only serving have no third-party de
 
 ```powershell
 python -m pip install -e .
-python -m evidence_alpha demo --output-dir artifacts/demo
-python -m evidence_alpha verify --artifact-dir artifacts/demo
-python -m evidence_alpha serve --artifact-dir artifacts/demo --host 127.0.0.1 --port 8080
+python -m evidence_alpha demo --output-dir artifacts/demo-v0.3
+python -m evidence_alpha verify --artifact-dir artifacts/demo-v0.3
+python -m evidence_alpha serve --artifact-dir artifacts/demo-v0.3 --host 127.0.0.1 --port 8080
 ```
 
-Open `http://127.0.0.1:8080/health` and `http://127.0.0.1:8080/api/v1/runs/latest`.
+Open `http://127.0.0.1:8080/health`, `http://127.0.0.1:8080/api/v1/runs/latest`, and `http://127.0.0.1:8080/api/v1/runs/latest/independent-validation`.
 
 ## Three-system integration
 
@@ -102,6 +102,20 @@ The v0.2.1 preflight fixes a causality defect in stale-data handling: T+1 compar
 
 Current local real artifacts are not fresh enough to run that loop. V3 ends on 2024-12-31; V6.5 weights and NVDA/TSM/SPY TDX prices end on 2026-07-17; the only news event is synthetic and has an August 2026 as-of. The V6.5 manifest also identifies raw-close corporate-action, survivorship, and borrow-proxy limitations. Sanitized evidence is in `evidence/v0.2.1/real_data_preflight.json`.
 
+## Independent validation v0.3
+
+v0.3 adds a fail-closed independent-validation stage to the core pipeline:
+
+- chronological in-sample/out-of-sample partitions ordered by event `observed_at`;
+- configurable rolling OOS folds with no cross-partition event references;
+- primary-window signed abnormal-return summaries;
+- factor baseline, placebo, one-day-delay, and doubled-cost comparisons;
+- hard rejection for leakage, unknown event refs, malformed study rows, duplicate visible refs, and missing or non-finite scenario outputs;
+- `INCONCLUSIVE` for synthetic/unknown data or insufficient chronological samples;
+- `PROMOTE` only when every real-data, OOS, rolling-stability, placebo, delay, and doubled-cost gate passes.
+
+The release passes 21/21 automated tests, including positive, negative, insufficient-sample, leakage, malformed-row, and read-only API cases. The sealed synthetic demo remains `INCONCLUSIVE`: it contains 2 usable events, only 1 OOS event, and incomplete rolling folds. This is the expected fail-closed result, not an economic claim.
+
 ## Inputs
 
 - versioned news events and evidence from read-only HTTP GET endpoints;
@@ -116,11 +130,12 @@ Current local real artifacts are not fresh enough to run that loop. V3 ends on 2
 - factor-only, event-only, and fused pre-V4 weights;
 - V4 input cache, external backtest results, and V4 output manifest;
 - `signals.json`, `orders.json`, and `fills.json` with event/version/evidence lineage; `paper_orders.json` is retained for compatibility;
+- `independent_validation.json` with chronological partitions, rolling folds, window summaries, scenarios, gates, and decision;
 - immutable news export and machine-readable gate evidence.
 
 ## Live gate
 
-Research and Paper use are available. Live remains blocked until real V3 and price artifacts, enough real event samples, rolling OOS and robustness evidence, a real PB borrow feed, continuous Paper operation, independent risk verification, broker-specific security design, and explicit release authorization are all complete.
+Research and Paper use are available. The rolling OOS and robustness mechanism is implemented, but Live remains blocked until fresh real V3 and corporate-action-safe price artifacts pass it with enough real events, and until a real PB borrow feed, continuous Paper operation, independent risk verification, broker-specific security design, and explicit release authorization are all complete.
 
 Project state is tracked in [STATE.md](STATE.md). Release evidence is retained under `evidence/<release-id>/`.
 

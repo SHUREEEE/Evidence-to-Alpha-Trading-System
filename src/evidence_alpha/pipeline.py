@@ -8,6 +8,10 @@ import json
 from typing import Any
 
 from .contracts import file_digests, load_baseline_weights, load_evidence, load_events, load_mappings, load_prices, select_visible_versions
+from .independent_validation import (
+    IndependentValidationConfig,
+    run_independent_validation,
+)
 from .models import ContractError, content_hash, parse_datetime
 from .oms import OmsConfig, simulate_paper_oms
 from .portfolio import PortfolioConfig, build_portfolios
@@ -22,6 +26,11 @@ class RunConfig:
     cutoff: datetime
     benchmark: str = "SPY"
     minimum_event_count: int = 30
+    data_classification: str = "unknown"
+    oos_fraction: float = 0.30
+    minimum_oos_events: int = 10
+    rolling_folds: int = 3
+    primary_window_days: int = 5
     signal: SignalConfig = field(default_factory=SignalConfig)
     portfolio: PortfolioConfig = field(default_factory=PortfolioConfig)
     oms: OmsConfig = field(default_factory=OmsConfig)
@@ -32,6 +41,11 @@ class RunConfig:
             "cutoff": self.cutoff.isoformat(),
             "benchmark": self.benchmark,
             "minimum_event_count": self.minimum_event_count,
+            "data_classification": self.data_classification,
+            "oos_fraction": self.oos_fraction,
+            "minimum_oos_events": self.minimum_oos_events,
+            "rolling_folds": self.rolling_folds,
+            "primary_window_days": self.primary_window_days,
             "signal": asdict(self.signal),
             "portfolio": asdict(self.portfolio),
             "oms": asdict(self.oms),
@@ -88,10 +102,37 @@ def run_pipeline(*, events_path: str | Path, evidence_path: str | Path, mappings
     placebo_summary = _scenario_summary("placebo", run_id, config.cutoff, placebo_weights, prices, str(portfolio["factor_version"]), {}, config.oms)
     scenarios = {"baseline": _artifact_return(baseline_summary), "overlay": _artifact_return(oms_summary), "one_day_delay": _artifact_return(delayed_summary), "placebo": _artifact_return(placebo_summary), "double_cost": _artifact_return(double_cost_summary)}
 
-    audit = validate_run(config.cutoff, all_events, visible, evidence, signals, orders, fills, portfolio, oms_summary, scenarios, unmapped, config.minimum_event_count)
+    independent_validation = run_independent_validation(
+        events=visible,
+        event_study=event_study,
+        scenarios=scenarios,
+        config=IndependentValidationConfig(
+            data_classification=config.data_classification,
+            minimum_events=config.minimum_event_count,
+            oos_fraction=config.oos_fraction,
+            minimum_oos_events=config.minimum_oos_events,
+            rolling_folds=config.rolling_folds,
+            primary_window_days=config.primary_window_days,
+        ),
+    )
+    audit = validate_run(
+        config.cutoff,
+        all_events,
+        visible,
+        evidence,
+        signals,
+        orders,
+        fills,
+        portfolio,
+        oms_summary,
+        scenarios,
+        independent_validation,
+        unmapped,
+        config.minimum_event_count,
+    )
     report: dict[str, Any] = {
         "run_id": run_id,
-        "release": "v0.1.0",
+        "release": "v0.3.0",
         "cutoff": config.cutoff.isoformat(),
         "created_at": datetime.now().astimezone().isoformat(),
         "decision": audit["decision"],
@@ -102,6 +143,7 @@ def run_pipeline(*, events_path: str | Path, evidence_path: str | Path, mappings
         "portfolio": portfolio,
         "paper_oms": oms_summary,
         "scenarios": scenarios,
+        "independent_validation": independent_validation,
         "audit": audit,
         "limitations": ["The MVP uses daily bars and a deterministic paper fill model.", "The demo data is synthetic and cannot support an economic promotion claim.", "No broker, credentials, or real-money execution path is present."],
     }
@@ -115,6 +157,7 @@ def run_pipeline(*, events_path: str | Path, evidence_path: str | Path, mappings
     _write_json(output / "signals.json", signal_payload)
     _write_json(output / "orders.json", order_payload)
     _write_json(output / "fills.json", fill_payload)
+    _write_json(output / "independent_validation.json", independent_validation)
     with (output / "event_study.csv").open("w", encoding="utf-8", newline="") as handle:
         fields = ["event_ref", "ticker", "window_days", "start_date", "end_date", "return", "benchmark_return", "abnormal_return", "status"]
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -129,4 +172,3 @@ def run_pipeline(*, events_path: str | Path, evidence_path: str | Path, mappings
 def config_from_cutoff(cutoff: str | datetime, **overrides: Any) -> RunConfig:
     parsed = parse_datetime(cutoff, "cutoff") if not isinstance(cutoff, datetime) else cutoff
     return RunConfig(cutoff=parsed, **overrides)
-
