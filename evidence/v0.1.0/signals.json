@@ -1,0 +1,32 @@
+[
+  {
+    "config_hash": "a9bd7881fdd90ef53bd4717a6ce916c76e787908615d17beb6d48ea0c3e501ab",
+    "decayed_strength": -0.157691436,
+    "event_id": "EVT-20260115-002",
+    "event_version": 1,
+    "evidence_ids": [
+      "SRC-003",
+      "SRC-004"
+    ],
+    "raw_strength": -0.2046,
+    "sector": "Semiconductors",
+    "signal_asof": "2026-01-16T08:00:00+00:00",
+    "signal_id": "SIG-A88D789EE964DDE3",
+    "ticker": "AMD"
+  },
+  {
+    "config_hash": "a9bd7881fdd90ef53bd4717a6ce916c76e787908615d17beb6d48ea0c3e501ab",
+    "decayed_strength": 0.515784388751,
+    "event_id": "EVT-20260112-001",
+    "event_version": 2,
+    "evidence_ids": [
+      "SRC-001",
+      "SRC-002"
+    ],
+    "raw_strength": 0.5772,
+    "sector": "Semiconductors",
+    "signal_asof": "2026-01-16T08:00:00+00:00",
+    "signal_id": "SIG-6A41C0BC436BEE9F",
+    "ticker": "NVDA"
+  }
+]

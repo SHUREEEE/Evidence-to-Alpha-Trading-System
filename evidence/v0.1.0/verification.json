@@ -1,0 +1,22 @@
+{
+  "release": "v0.1.0",
+  "verified_at": "2026-08-20",
+  "test_command": "python -m unittest discover -s tests -v",
+  "tests_passed": 6,
+  "tests_failed": 0,
+  "demo_run_id": "RUN-1E8940BC3609E7BB",
+  "demo_decision": "INCONCLUSIVE",
+  "hard_integrity_gates_passed": 7,
+  "hard_integrity_gates_failed": 0,
+  "api_smoke": {
+    "health": "200",
+    "latest_report": "200",
+    "write_method": "405 read_only_service"
+  },
+  "document_render": {
+    "status": "not_available",
+    "reason": "LibreOffice/soffice is not installed in the workspace runtime"
+  },
+  "human_verifier": "pending",
+  "production_release": "not authorized"
+}

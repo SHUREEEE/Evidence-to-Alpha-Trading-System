@@ -1,0 +1,38 @@
+[
+  {
+    "commission": 4.7713779,
+    "fill_id": "FIL-6A7714686EB24BA4",
+    "fill_price": 40.23084237,
+    "order_id": "ORD-21D6B5F6EE299ED3",
+    "quantity": 593,
+    "run_id": "RUN-1E8940BC3609E7BB",
+    "side": "BUY",
+    "slippage_bps": 5.0,
+    "ticker": "AMD",
+    "trade_date": "2026-01-19"
+  },
+  {
+    "commission": 6.31636196,
+    "fill_id": "FIL-900156B2E3D287D3",
+    "fill_price": 51.26917177,
+    "order_id": "ORD-9CD07136C02984C7",
+    "quantity": 616,
+    "run_id": "RUN-1E8940BC3609E7BB",
+    "side": "BUY",
+    "slippage_bps": 5.0,
+    "ticker": "NVDA",
+    "trade_date": "2026-01-19"
+  },
+  {
+    "commission": 8.88920279,
+    "fill_id": "FIL-840C2D2E73337104",
+    "fill_price": 100.78461212,
+    "order_id": "ORD-4E2B37DC7A3FD6EF",
+    "quantity": 441,
+    "run_id": "RUN-1E8940BC3609E7BB",
+    "side": "BUY",
+    "slippage_bps": 5.0,
+    "ticker": "SPY",
+    "trade_date": "2026-01-19"
+  }
+]

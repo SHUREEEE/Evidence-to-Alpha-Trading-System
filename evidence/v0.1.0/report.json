@@ -1,0 +1,168 @@
+{
+  "audit": {
+    "decision": "INCONCLUSIVE",
+    "facts": [
+      "All reported hard gates are computed from the current run artifacts.",
+      "Paper execution is simulated and does not represent broker fills."
+    ],
+    "gates": [
+      {
+        "detail": "latest visible event version selected at cutoff",
+        "name": "point_in_time_versions",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "missing evidence: []",
+        "name": "evidence_completeness",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "signals carry evidence IDs and configuration hash",
+        "name": "signal_lineage",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "all fills occur after signal cutoff date",
+        "name": "paper_oms_t_plus_one",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "{'weights_sum_to_one': True, 'single_name_limit': True, 'overlay_per_name_limit': True, 'turnover_limit': True}",
+        "name": "portfolio_constraints",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "{'cash_residual': 3.292987969416572e-06, 'equity_residual': 0.0, 'closed_to_cent': True}",
+        "name": "ledger_reconciliation",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "baseline, overlay, one-day delay, placebo, and doubled-cost outputs are recorded",
+        "name": "stress_scenarios_present",
+        "passed": true,
+        "severity": "hard"
+      },
+      {
+        "detail": "2 unmapped entity records disclosed",
+        "name": "mapping_disclosure",
+        "passed": true,
+        "severity": "disclosure"
+      },
+      {
+        "detail": "visible events=2, required=30",
+        "name": "sample_sufficiency",
+        "passed": false,
+        "severity": "research"
+      }
+    ],
+    "inferences": [
+      "Passing integrity gates makes the run reproducible but does not prove economic value."
+    ],
+    "missing_evidence_ids": [],
+    "rationale": "Integrity gates passed, but the event sample is too small for a promotion claim.",
+    "unknowns": [
+      "Real execution quality and production capacity remain unknown without broker and market-impact data."
+    ],
+    "unmapped": [
+      {
+        "entity": "Semiconductors",
+        "event_ref": "EVT-20260112-001:v2"
+      },
+      {
+        "entity": "Semiconductors",
+        "event_ref": "EVT-20260115-002:v1"
+      }
+    ]
+  },
+  "config_hash": "486e6d95a1c879d773cd95749d927b511261492fdc0d25fa6c2981eb2c4b4dbc",
+  "counts": {
+    "event_versions": 4,
+    "fills": 3,
+    "orders": 3,
+    "signals": 2,
+    "unmapped": 2,
+    "visible_events": 2
+  },
+  "created_at": "2026-08-20T12:39:38.152937+08:00",
+  "cutoff": "2026-01-16T08:00:00+00:00",
+  "decision": "INCONCLUSIVE",
+  "input_digests": {
+    "baseline_weights": "2a01ec5d3f449e8b9e718c8a968a2924e4300510e44275379896f2def1674d44",
+    "events": "5ed7fbeaf3a97e11067e23fa1648e266271b7cb20ea438bc1212600874e8fd52",
+    "evidence": "46509fd74b1a068f58601d3463471d3f24360662dbfd6f556bbfb2fa4f1530b1",
+    "mappings": "cfbfdc6e9f6acfd380a24418a5f27a30832587f888b328e15a841e0d62a0cdd0",
+    "prices": "c46e810094a3abba1cb54f8cc177116977a410b934e4d3342fc4805462f8a072"
+  },
+  "limitations": [
+    "The MVP uses daily bars and a deterministic paper fill model.",
+    "The demo data is synthetic and cannot support an economic promotion claim.",
+    "No broker, credentials, or real-money execution path is present."
+  ],
+  "paper_oms": {
+    "config_hash": "46a742ecef3a9327a8cf2eff82a94d227f482d4a17aefa2cacd0f0e86fb2359a",
+    "ending_cash": 95.3097734,
+    "ending_equity": 103333.3279494,
+    "fill_date": "2026-01-19",
+    "mark_date": "2026-03-05",
+    "market_value": 103238.018176,
+    "positions": {
+      "AMD": 593,
+      "NVDA": 616,
+      "SPY": 441
+    },
+    "realized_pnl": 0.0,
+    "reconciliation": {
+      "cash_residual": 3.292987969416572e-06,
+      "closed_to_cent": true,
+      "equity_residual": 0.0
+    },
+    "starting_cash": 100000.0,
+    "total_commission": 19.97694266,
+    "total_pnl": 3333.3279494,
+    "unrealized_pnl": 3353.30489535
+  },
+  "portfolio": {
+    "baseline": {
+      "AMD": 0.25,
+      "NVDA": 0.3,
+      "SPY": 0.45
+    },
+    "config_hash": "8d89c99bc20a32dcc2050fe989ac0fcfe6c0d86c7e0ff23f0d07bb9717455ea9",
+    "constraints": {
+      "overlay_per_name_limit": true,
+      "single_name_limit": true,
+      "turnover_limit": true,
+      "weights_sum_to_one": true
+    },
+    "event_only": {
+      "NVDA": 1.0
+    },
+    "factor_version": "FACTOR-2026-01",
+    "overlay": {
+      "AMD": 0.23891776985665333,
+      "NVDA": 0.3158568028466933,
+      "SPY": 0.4452254272966533
+    },
+    "overlay_delta": {
+      "AMD": -0.011082230143346666,
+      "NVDA": 0.01585680284669333,
+      "SPY": -0.004774572703346691
+    }
+  },
+  "rationale": "Integrity gates passed, but the event sample is too small for a promotion claim.",
+  "release": "v0.1.0",
+  "run_id": "RUN-1E8940BC3609E7BB",
+  "scenarios": {
+    "baseline": 0.032943100810300004,
+    "double_cost": 0.0326092983831,
+    "one_day_delay": 0.033333279494,
+    "overlay": 0.033333279494,
+    "placebo": 0.0327246063568
+  }
+}

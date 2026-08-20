@@ -1,0 +1,81 @@
+{
+  "decision": "INCONCLUSIVE",
+  "facts": [
+    "All reported hard gates are computed from the current run artifacts.",
+    "Paper execution is simulated and does not represent broker fills."
+  ],
+  "gates": [
+    {
+      "detail": "latest visible event version selected at cutoff",
+      "name": "point_in_time_versions",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "missing evidence: []",
+      "name": "evidence_completeness",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "signals carry evidence IDs and configuration hash",
+      "name": "signal_lineage",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "all fills occur after signal cutoff date",
+      "name": "paper_oms_t_plus_one",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "{'weights_sum_to_one': True, 'single_name_limit': True, 'overlay_per_name_limit': True, 'turnover_limit': True}",
+      "name": "portfolio_constraints",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "{'cash_residual': 3.292987969416572e-06, 'equity_residual': 0.0, 'closed_to_cent': True}",
+      "name": "ledger_reconciliation",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "baseline, overlay, one-day delay, placebo, and doubled-cost outputs are recorded",
+      "name": "stress_scenarios_present",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "2 unmapped entity records disclosed",
+      "name": "mapping_disclosure",
+      "passed": true,
+      "severity": "disclosure"
+    },
+    {
+      "detail": "visible events=2, required=30",
+      "name": "sample_sufficiency",
+      "passed": false,
+      "severity": "research"
+    }
+  ],
+  "inferences": [
+    "Passing integrity gates makes the run reproducible but does not prove economic value."
+  ],
+  "missing_evidence_ids": [],
+  "rationale": "Integrity gates passed, but the event sample is too small for a promotion claim.",
+  "unknowns": [
+    "Real execution quality and production capacity remain unknown without broker and market-impact data."
+  ],
+  "unmapped": [
+    {
+      "entity": "Semiconductors",
+      "event_ref": "EVT-20260112-001:v2"
+    },
+    {
+      "entity": "Semiconductors",
+      "event_ref": "EVT-20260115-002:v1"
+    }
+  ]
+}
