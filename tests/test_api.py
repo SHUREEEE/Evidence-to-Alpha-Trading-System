@@ -28,6 +28,11 @@ class ApiTests(unittest.TestCase):
                 json.dumps({"decision": "INCONCLUSIVE"}),
                 encoding="utf-8",
             )
+            (artifact_dir / "event_study.csv").write_text(
+                "event_ref,ticker,window_days,status\n"
+                "E1:v1,NVDA,1,ok\n",
+                encoding="utf-8",
+            )
             handler = type(
                 "TestArtifactHandler", (ArtifactHandler,), {"artifact_dir": artifact_dir}
             )
@@ -48,6 +53,13 @@ class ApiTests(unittest.TestCase):
                 ) as response:
                     independent = json.load(response)
                 self.assertEqual(independent["decision"], "INCONCLUSIVE")
+                with urlopen(
+                    f"{base_url}/api/v1/runs/latest/event-study",
+                    timeout=5,
+                ) as response:
+                    event_study = json.load(response)
+                self.assertEqual(event_study[0]["event_ref"], "E1:v1")
+                self.assertEqual(event_study[0]["ticker"], "NVDA")
 
                 request = Request(f"{base_url}/api/v1/runs/latest", method="POST")
                 with self.assertRaises(HTTPError) as rejected:

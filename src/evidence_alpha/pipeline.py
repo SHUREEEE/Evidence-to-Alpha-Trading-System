@@ -132,7 +132,7 @@ def run_pipeline(*, events_path: str | Path, evidence_path: str | Path, mappings
     )
     report: dict[str, Any] = {
         "run_id": run_id,
-        "release": "v0.3.0",
+        "release": "v0.4.0",
         "cutoff": config.cutoff.isoformat(),
         "created_at": datetime.now().astimezone().isoformat(),
         "decision": audit["decision"],

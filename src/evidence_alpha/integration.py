@@ -1,16 +1,27 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from math import floor
 from pathlib import Path
+import csv
 import json
 import subprocess
 import sys
 from typing import Any
 
 from .contracts import select_visible_versions
-from .models import ContractError, EventSignal, content_hash, parse_datetime
+from .independent_validation import (
+    IndependentValidationConfig,
+    run_independent_validation,
+)
+from .models import (
+    ContractError,
+    EventSignal,
+    PriceBar,
+    content_hash,
+    parse_datetime,
+)
 from .multifactor_adapter import (
     FactorInputs,
     MultiFactorAdapter,
@@ -19,11 +30,19 @@ from .multifactor_adapter import (
 )
 from .news_adapter import NewsAdapter, NewsExport, write_news_export
 from .signals import SignalConfig, generate_signals, lineage_by_ticker
+from .study import run_event_study
 
 
 @dataclass(frozen=True)
 class IntegrationConfig:
     asof: datetime
+    benchmark: str = 'SPY'
+    data_classification: str = 'unknown'
+    minimum_event_count: int = 30
+    oos_fraction: float = 0.30
+    minimum_oos_events: int = 10
+    rolling_folds: int = 3
+    primary_window_days: int = 5
     overlay_scale: float = 0.02
     max_overlay_per_name: float = 0.01
     overlay_turnover_cap: float = 0.08
@@ -32,6 +51,11 @@ class IntegrationConfig:
     paper_nav: float = 100000.0
 
     def validate(self) -> None:
+        parse_datetime(self.asof, 'asof')
+        if not self.benchmark.strip():
+            raise ContractError('benchmark must be non-empty')
+        if self.cost_bps < 0:
+            raise ContractError('cost_bps must be non-negative')
         if self.overlay_scale <= 0:
             raise ContractError("overlay_scale must be positive")
         if self.max_overlay_per_name <= 0:
@@ -42,6 +66,14 @@ class IntegrationConfig:
             raise ContractError("minimum_universe_overlap must be in [0, 1]")
         if self.paper_nav <= 0:
             raise ContractError("paper_nav must be positive")
+        IndependentValidationConfig(
+            data_classification=self.data_classification,
+            minimum_events=self.minimum_event_count,
+            oos_fraction=self.oos_fraction,
+            minimum_oos_events=self.minimum_oos_events,
+            rolling_folds=self.rolling_folds,
+            primary_window_days=self.primary_window_days,
+        ).validate()
 
 
 def config_from_asof(asof: str | datetime, **overrides: Any) -> IntegrationConfig:
@@ -155,6 +187,78 @@ def run_integration(
         },
         config.cost_bps,
     )
+    event_tickers: dict[str, set[str]] = {}
+    for signal in signals:
+        event_ref = f'{signal.event_id}:v{signal.event_version}'
+        event_tickers.setdefault(event_ref, set()).add(signal.ticker)
+    price_bars = _factor_price_bars(factor)
+    event_study = run_event_study(
+        visible,
+        event_tickers,
+        price_bars,
+        config.benchmark,
+    )
+
+    placebo_row = build_placebo_weights(baseline, delta)
+    placebo_comparison = compare_t_plus_one(
+        selected_day,
+        config.asof.date(),
+        factor,
+        {'placebo': placebo_row},
+        config.cost_bps,
+    )
+    delayed_dates = [
+        day for day in factor.prices.dates if day > config.asof.date()
+    ]
+    delayed_anchor = (
+        delayed_dates[0]
+        if delayed_dates
+        else config.asof.date() + timedelta(days=1)
+    )
+    delayed_comparison = compare_t_plus_one(
+        selected_day,
+        delayed_anchor,
+        factor,
+        {'one_day_delay': fused_row},
+        config.cost_bps,
+    )
+    doubled_cost_comparison = compare_t_plus_one(
+        selected_day,
+        config.asof.date(),
+        factor,
+        {'double_cost': fused_row},
+        config.cost_bps * 2,
+    )
+    scenarios = {
+        'baseline': _scenario_net_return(
+            comparisons, 'factor_baseline'
+        ),
+        'overlay': _scenario_net_return(
+            comparisons, 'factor_plus_event_pre_v4'
+        ),
+        'placebo': _scenario_net_return(placebo_comparison, 'placebo'),
+        'one_day_delay': _scenario_net_return(
+            delayed_comparison, 'one_day_delay'
+        ),
+        'double_cost': _scenario_net_return(
+            doubled_cost_comparison, 'double_cost'
+        ),
+    }
+    effective_classification = _effective_data_classification(news, config)
+    independent_validation = run_independent_validation(
+        events=visible,
+        event_study=event_study,
+        scenarios=scenarios,
+        config=IndependentValidationConfig(
+            data_classification=effective_classification,
+            minimum_events=config.minimum_event_count,
+            oos_fraction=config.oos_fraction,
+            minimum_oos_events=config.minimum_oos_events,
+            rolling_folds=config.rolling_folds,
+            primary_window_days=config.primary_window_days,
+        ),
+    )
+
     lineage = lineage_by_ticker(signals)
     blotter = simulate_t_plus_one_rebalance(
         selected_day,
@@ -215,21 +319,79 @@ def run_integration(
         gates["multi_factor_three_backtests"] = all(
             item["status"] == "PASS" for item in external["backtests"].values()
         )
-    hard_failures = [name for name, passed in gates.items() if not passed]
-    synthetic = bool(news.manifest.get("synthetic"))
-    decision = "REJECT" if hard_failures else "INCONCLUSIVE"
-    rationale = (
-        "One or more integration integrity gates failed."
-        if hard_failures
-        else "The three-system paper loop is operational, but the available news sample is synthetic "
-        "or insufficient for an economic promotion claim."
+    integration_hard_failures = [
+        name for name, passed in gates.items() if not passed
+    ]
+    validation_hard_failures = list(
+        independent_validation.get('hard_failures', [])
     )
+    gates['independent_validation_integrity'] = not validation_hard_failures
+    hard_failures = [
+        *integration_hard_failures,
+        *[
+            f'independent_validation:{name}'
+            for name in validation_hard_failures
+        ],
+    ]
+    synthetic = bool(news.manifest.get("synthetic"))
 
     config_payload = {**asdict(config), "asof": config.asof.isoformat()}
     run_id = f"INT-{content_hash({'news': news.manifest, 'asof': config.asof.isoformat(), 'factor_paths': {key: str(value) for key, value in factor.paths.items()}, 'config': config_payload})[:16].upper()}"
+    if integration_hard_failures:
+        decision = 'REJECT'
+        rationale = 'One or more integration integrity gates failed.'
+    elif validation_hard_failures:
+        decision = 'REJECT'
+        rationale = str(independent_validation.get('rationale'))
+    else:
+        decision = str(independent_validation.get('decision', 'REJECT'))
+        rationale = str(independent_validation.get('rationale'))
+
+    audit_gates = [
+        {
+            'name': name,
+            'passed': passed,
+            'detail': 'Computed by the v0.4.0 three-system integration run.',
+            'severity': 'hard',
+        }
+        for name, passed in gates.items()
+    ]
+    validation_decision = independent_validation.get('decision')
+    validation_research_failures = independent_validation.get(
+        'research_failures', []
+    )
+    audit_gates.append(
+        {
+            'name': 'independent_validation_research',
+            'passed': decision == 'PROMOTE',
+            'detail': (
+                f'decision={validation_decision}; '
+                f'research failures={validation_research_failures}'
+            ),
+            'severity': 'research',
+        }
+    )
+    audit = {
+        'decision': decision,
+        'rationale': rationale,
+        'gates': audit_gates,
+        'integration_hard_failures': integration_hard_failures,
+        'independent_validation_hard_failures': validation_hard_failures,
+        'facts': [
+            'All hard gates are computed from this integration run.',
+            'Paper fills are deterministic adjusted-close simulations.',
+        ],
+        'inferences': [
+            'Passing integrity gates supports reproducibility, not alpha.'
+        ],
+        'unknowns': [
+            'Capacity, borrow, market impact, and live execution remain unknown.'
+        ],
+    }
+
     report: dict[str, Any] = {
         "run_id": run_id,
-        "release": "v0.2.1-integration",
+        "release": "v0.4.0-integration",
         "created_at": datetime.now().astimezone().isoformat(),
         "asof": config.asof.isoformat(),
         "execution_anchor_date": config.asof.date().isoformat(),
@@ -309,14 +471,66 @@ def run_integration(
             "V4 risk controls remain owned and executed by multi-factor-alpha-platform.",
         ],
     }
-    _write_json(output / "integration_report.json", report)
-    _write_json(output / "report.json", report)
     _write_json(output / "signals.json", [item.to_dict() for item in signals])
     _write_json(output / "visible_events.json", [item.to_dict() for item in visible])
     _write_json(output / "paper_orders.json", paper_orders)
     _write_json(output / "orders.json", paper_orders)
     _write_json(output / "fills.json", paper_fills)
-    _write_json(output / "integration_audit.json", {"gates": gates, "hard_failures": hard_failures})
+    report['data_classification'] = effective_classification
+    report['scenarios'] = scenarios
+    report['independent_validation'] = independent_validation
+    report['audit'] = audit
+    report['integration_hard_failures'] = integration_hard_failures
+    report['counts']['event_study_rows'] = len(event_study)
+    report['artifacts']['event_study'] = 'event_study.csv'
+    report['artifacts']['independent_validation'] = (
+        'independent_validation.json'
+    )
+    report['artifacts']['audit'] = 'audit.json'
+    report['live_launch']['reasons'] = [
+        (
+            'The referenced multi-factor platform records PB borrow '
+            'real feed as a P0 blocker.'
+        ),
+        (
+            f'Independent validation decision is {decision}; live release '
+            'requires separate production risk acceptance.'
+        ),
+        'This project intentionally has no broker execution path.',
+    ]
+    _write_json(output / 'integration_report.json', report)
+    _write_json(output / 'report.json', report)
+    _write_json(output / 'independent_validation.json', independent_validation)
+    _write_json(output / 'audit.json', audit)
+    _write_json(
+        output / 'integration_audit.json',
+        {
+            'decision': decision,
+            'gates': gates,
+            'hard_failures': hard_failures,
+            'integration_hard_failures': integration_hard_failures,
+            'independent_validation_hard_failures': (
+                validation_hard_failures
+            ),
+        },
+    )
+    with (output / 'event_study.csv').open(
+        'w', encoding='utf-8', newline=''
+    ) as handle:
+        fields = [
+            'event_ref',
+            'ticker',
+            'window_days',
+            'start_date',
+            'end_date',
+            'return',
+            'benchmark_return',
+            'abnormal_return',
+            'status',
+        ]
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(event_study)
     return report
 
 
@@ -376,6 +590,52 @@ def build_event_only_weights(
         raise ContractError("visible events produced no non-zero factor-universe score")
     gross_target = max(1.0, sum(abs(value) for value in baseline.values()))
     return {ticker: value / gross_score * gross_target for ticker, value in score.items()}
+
+
+def build_placebo_weights(
+    baseline: dict[str, float], delta: dict[str, float]
+) -> dict[str, float]:
+    tickers = sorted(baseline)
+    if set(tickers) != set(delta):
+        raise ContractError('placebo overlay must match the factor universe')
+    values = [delta[ticker] for ticker in tickers]
+    rotated = values[1:] + values[:1]
+    return {
+        ticker: baseline[ticker] + rotated[index]
+        for index, ticker in enumerate(tickers)
+    }
+
+
+def _factor_price_bars(factor: FactorInputs) -> list[PriceBar]:
+    return [
+        PriceBar(
+            trade_date=day,
+            ticker=ticker,
+            open=value,
+            close=value,
+        )
+        for day in factor.prices.dates
+        for ticker, value in sorted(factor.prices.adj_close[day].items())
+    ]
+
+
+def _scenario_net_return(
+    comparisons: dict[str, dict[str, Any]], name: str
+) -> object:
+    row = comparisons.get(name, {})
+    return row.get('net_return')
+
+
+def _effective_data_classification(
+    news: NewsExport, config: IntegrationConfig
+) -> str:
+    if bool(news.manifest.get('synthetic')):
+        return 'synthetic'
+    if config.data_classification == 'real':
+        return 'real'
+    if config.data_classification == 'synthetic':
+        return 'synthetic'
+    return 'unknown'
 
 
 def compare_t_plus_one(

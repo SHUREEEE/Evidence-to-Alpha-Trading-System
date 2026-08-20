@@ -1,0 +1,9 @@
+event_ref,ticker,window_days,start_date,end_date,return,benchmark_return,abnormal_return,status
+evt_5ace256258336f7b:v2,NVDA,1,2026-08-20,2026-08-21,0.003794037940379358,0.0015552099533437946,0.002238827987035563,ok
+evt_5ace256258336f7b:v2,NVDA,3,2026-08-20,,,,,insufficient_data
+evt_5ace256258336f7b:v2,NVDA,5,2026-08-20,,,,,insufficient_data
+evt_5ace256258336f7b:v2,NVDA,20,2026-08-20,,,,,insufficient_data
+evt_5ace256258336f7b:v2,TSM,1,2026-08-20,2026-08-21,0.0023856858846917905,0.0015552099533437946,0.0008304759313479959,ok
+evt_5ace256258336f7b:v2,TSM,3,2026-08-20,,,,,insufficient_data
+evt_5ace256258336f7b:v2,TSM,5,2026-08-20,,,,,insufficient_data
+evt_5ace256258336f7b:v2,TSM,20,2026-08-20,,,,,insufficient_data

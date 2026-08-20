@@ -1,0 +1,102 @@
+{
+  "decision": "INCONCLUSIVE",
+  "facts": [
+    "All hard gates are computed from this integration run.",
+    "Paper fills are deterministic adjusted-close simulations."
+  ],
+  "gates": [
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "news_read_only_contract",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "point_in_time_versions",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "event_lineage",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "factor_asof_not_future",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "universe_overlap",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "pre_v4_overlay_zero_sum",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "pre_v4_overlay_turnover",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "t_plus_one_prices",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "paper_fill_after_asof",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "paper_reconciliation",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "multi_factor_v4_prod_loader",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "multi_factor_three_backtests",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "Computed by the v0.4.0 three-system integration run.",
+      "name": "independent_validation_integrity",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "decision=INCONCLUSIVE; research failures=['real_data_classification', 'event_sample_sufficient', 'oos_sample_sufficient', 'rolling_folds_complete', 'oos_primary_window_positive', 'rolling_primary_window_stable', 'double_cost_exceeds_factor_baseline']",
+      "name": "independent_validation_research",
+      "passed": false,
+      "severity": "research"
+    }
+  ],
+  "independent_validation_hard_failures": [],
+  "inferences": [
+    "Passing integrity gates supports reproducibility, not alpha."
+  ],
+  "integration_hard_failures": [],
+  "rationale": "Integrity gates passed, but real-data or chronological sample coverage is insufficient.",
+  "unknowns": [
+    "Capacity, borrow, market impact, and live execution remain unknown."
+  ]
+}

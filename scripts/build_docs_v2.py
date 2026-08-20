@@ -24,7 +24,7 @@ def configure(doc: Document, short_name: str) -> None:
     footer = doc.sections[0].footer.paragraphs[0]
     footer.clear()
     footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = footer.add_run("v0.3.0 | Internal research document | Page ")
+    run = footer.add_run("v0.4.0 | Internal research document | Page ")
     base.set_run_font(run, size=9, color=MUTED)
     field = OxmlElement("w:fldSimple")
     field.set(qn("w:instr"), "PAGE")
@@ -52,7 +52,7 @@ def title_block(doc: Document, title: str, subtitle: str, status: str) -> None:
     base.set_run_font(p.add_run(subtitle), size=13, color=RGBColor(70, 74, 80))
     rows = (
         ("项目", "Evidence-to-Alpha Trading System"),
-        ("版本", "v0.3.0 Independent Validation"),
+        ("版本", "v0.4.0 Integrated Validation"),
         ("日期", "2026-08-21"),
         ("状态", status),
     )
@@ -124,7 +124,7 @@ def table(doc: Document, headers: list[str], rows: list[list[str]], widths: list
 def build_selection() -> Document:
     doc = Document()
     configure(doc, "开源选型与 MVP 建议")
-    title_block(doc, "开源项目选型与 MVP 建议", "三系统交易研究闭环", "选型保持不变；独立验证已实现；Live 阻断")
+    title_block(doc, "开源项目选型与 MVP 建议", "三系统交易研究闭环", "选型保持不变；集成独立验证已实现；Live 阻断")
 
     base.add_heading(doc, "执行结论")
     para(doc, "建议：基于现有两个项目增加薄集成层。不要直接引入第三套完整交易引擎，也不要重写多因子平台。", "建议：")
@@ -181,11 +181,20 @@ def build_selection() -> Document:
     doc.add_page_break()
     base.add_heading(doc, "验证状态")
     table(doc, ["分类", "结论", "证据/限制"], [
-        ["已验证事实", "集成和验证接口可运行", "21/21 测试；独立 IS/OOS、滚动折叠、placebo、延迟和成本翻倍门禁已实现"],
+        ["已验证事实", "集成和验证接口可运行", "22/22 测试；integrate 已接入事件研究、独立 IS/OOS、滚动、placebo、延迟和成本翻倍门禁"],
         ["推断", "同契约真实数据可接入", "真实 V3 大文件尚未发现，仍需用户本地副本"],
         ["未知", "经济增量和实盘质量", "当前仅 2 个 synthetic 事件；真实 OOS、容量、borrow、成交尚未验证"],
         ["决策", "研究/Paper 可用", "当前 INCONCLUSIVE；Live BLOCKED"],
     ], [1600, 2150, 5610])
+
+    base.add_heading(doc, "v0.4.0 集成验证更新")
+    bullets(doc, [
+        "独立验证器已从核心 run 路径接入真实三系统 integrate 路径。",
+        "集成输出新增 event_study.csv、五个数值稳健性场景、independent_validation.json 和标准 audit.json。",
+        "Synthetic manifest 会覆盖任何 real 声明并强制分类为 synthetic，不能 PROMOTE。",
+        "验证运行 INT-3294801BE2C27699：13 个集成硬门禁全部通过，V4 loader 与三路回测均 PASS，标准 verify 通过。",
+        "当前仅 1 个 synthetic 可见事件，5 日主窗口样本不足，决策仍为 INCONCLUSIVE；Live 继续 BLOCKED。",
+    ])
 
     base.add_heading(doc, "最终选择")
     para(doc, "选择“基于现有项目改造并新增薄集成层”。这比直接使用通用引擎部署更简单，也比完全自研更尊重现有资产和责任边界。")
@@ -195,7 +204,7 @@ def build_selection() -> Document:
 def build_prd() -> Document:
     doc = Document()
     configure(doc, "产品需求文档")
-    title_block(doc, "产品需求文档", "证据驱动的事件增强交易系统", "需求已冻结；v0.3.0 Independent Validation")
+    title_block(doc, "产品需求文档", "证据驱动的事件增强交易系统", "需求已冻结；v0.4.0 Integrated Validation")
 
     base.add_heading(doc, "1. 产品目标")
     para(doc, "在严格使用当时可得新闻证据的条件下，把新闻事件转换为可回测事件 Alpha，并与现有多因子组合融合，形成研究、V4 风控、T+1 回测、Paper OMS 和归因反馈闭环。")
@@ -233,10 +242,10 @@ def build_prd() -> Document:
         ["FR-011", "V4 交接", "生成 v3_weights.parquet 与 v3_sector_map.csv"],
         ["FR-012", "外部回测", "三路由 run_backtest.py 接受；记录 return code/metrics"],
         ["FR-013", "Paper OMS", "T+1、side/qty/price/fee/lineage、会计闭合"],
-        ["FR-014", "独立验证", "按 observed_at 划分 IS/OOS；滚动折叠；泄漏/交叉分区硬拒绝"],
+        ["FR-014", "集成独立验证", "run 与 integrate 均按 observed_at 划分 IS/OOS；滚动折叠；泄漏/交叉分区硬拒绝"],
         ["FR-015", "稳健性与决策", "基线/placebo/延迟/成本翻倍；不足 INCONCLUSIVE；失败 REJECT"],
-        ["FR-016", "只读服务", "health/report/signals/orders/independent-validation；POST 405"],
-        ["FR-017", "可复现产物", "run ID、输入、配置、命令、清单、门禁和局限"],
+        ["FR-016", "只读服务", "health/report/signals/orders/event-study/independent-validation；POST 405"],
+        ["FR-017", "可复现产物", "run ID、输入、配置、event_study.csv、audit.json、门禁和局限"],
         ["FR-018", "实盘阻断", "PB/真实样本/OOS/独立验证/授权缺一则 BLOCKED"],
     ], [1200, 3150, 5010])
 
@@ -277,7 +286,9 @@ def build_prd() -> Document:
         ["外部接口", "V4 prod loader + 三路回测 return code 0", "PASS"],
         ["Paper OMS", "T+1 且闭合到 0.01", "PASS"],
         ["独立验证器", "IS/OOS、滚动、稳健性、失败关闭", "PASS：机制完成；样本不足"],
-        ["自动测试", "全部通过且无 ResourceWarning", "PASS：21/21"],
+        ["集成验证产物", "integrate 写事件研究、五场景、独立验证和标准审计", "PASS：8 行 event study；5/5 场景数值化"],
+        ["标准审计", "evidence-alpha verify 可验证 integrated artifact", "PASS：0 个硬失败"],
+        ["自动测试", "全部通过且无 ResourceWarning", "PASS：22/22"],
         ["经济价值", "真实样本 + OOS + 独立验证", "INCONCLUSIVE"],
         ["Live", "PB borrow 等 P0 全部 READY", "BLOCKED"],
     ], [2100, 4300, 2960])
@@ -296,7 +307,7 @@ def build_prd() -> Document:
 def build_development() -> Document:
     doc = Document()
     configure(doc, "开发与部署文档")
-    title_block(doc, "开发与部署文档", "Evidence-to-Alpha v0.3.0", "独立验证和本地只读部署已验证；Live 阻断")
+    title_block(doc, "开发与部署文档", "Evidence-to-Alpha v0.4.0", "集成独立验证和本地只读部署已验证；Live 阻断")
 
     base.add_heading(doc, "1. 架构决策")
     para(doc, "采用薄集成层：News Claws API -> NewsAdapter -> immutable EventSnapshot -> EventSignal -> pre-V4 Overlay -> multi-factor V4 -> T+1 backtest/Paper OMS -> IndependentValidation -> read-only API。")
@@ -306,7 +317,7 @@ def build_development() -> Document:
     table(doc, ["模块", "路径", "责任"], [
         ["NewsAdapter", "news_adapter.py", "GET、逐版本转换、时间/synthetic 门禁、证据导出"],
         ["MultiFactorAdapter", "multifactor_adapter.py", "CSV/Parquet、宽/长表、sector、V4 cache"],
-        ["Integration", "integration.py", "重叠、三路组合、预 V4、外部验证、Paper OMS"],
+        ["Integration", "integration.py", "重叠、三路组合、预 V4、事件研究、五场景、独立验证、标准审计、Paper OMS"],
         ["Contracts/Models", "contracts.py / models.py", "事件、证据、价格、权重类型与校验"],
         ["Signals", "signals.py", "门控、衰减和 lineage"],
         ["Independent Validation", "independent_validation.py", "按时间划分 IS/OOS、滚动折叠、稳健性门禁和三态决策"],
@@ -350,19 +361,21 @@ def build_development() -> Document:
         ["核心安装", "python -m pip install -e ."],
         ["Parquet/V4", "python -m pip install -e .[integrations]"],
         ["测试", "python -m unittest discover -s tests -v"],
-        ["独立验证演示", "python -m evidence_alpha demo --output-dir artifacts/demo-v0.3"],
+        ["独立验证演示", "python -m evidence_alpha demo --output-dir artifacts/demo-v0.4"],
         ["新闻导出", "python -m evidence_alpha news-export --news-base-url http://127.0.0.1:8765 --output-dir artifacts/news"],
         ["结果服务", "python -m evidence_alpha serve --artifact-dir artifacts/integrated --host 127.0.0.1 --port 8080"],
         ["Docker", "docker compose up --build"],
     ], [1900, 7460])
     para(doc, "完整集成命令：")
-    para(doc, "python -m evidence_alpha integrate --news-base-url http://127.0.0.1:8765 --factor-root <multi-factor-root> --asof <timezone-aware-timestamp> --output-dir artifacts/integrated --run-factor-v4 --run-factor-backtests")
+    para(doc, "python -m evidence_alpha integrate --news-base-url http://127.0.0.1:8765 --factor-root <multi-factor-root> --asof <timezone-aware-timestamp> --benchmark SPY --data-classification unknown --minimum-event-count 30 --minimum-oos-events 10 --rolling-folds 3 --primary-window-days 5 --output-dir artifacts/integrated --run-factor-v4 --run-factor-backtests")
     para(doc, "公共仓库缺少大型二进制文件时，用 --weights、--sectors、--prices 指向本地真实产物；demo 新闻需要显式 --allow-synthetic-news。")
 
     base.add_heading(doc, "7. 产物")
     table(doc, ["路径", "内容"], [
         ["integration_report.json", "状态、三路比较、门禁、外部验证、live block"],
         ["integration_audit.json", "机器可读集成门禁"],
+        ["audit.json", "标准门禁列表、三态决策、事实/推断/未知；供 verify 使用"],
+        ["event_study.csv", "逐事件、ticker、1/3/5/20 日窗口及异常收益状态"],
         ["independent_validation.json", "IS/OOS 分区、滚动折叠、场景收益、门禁和三态结论"],
         ["signals.json / orders.json / fills.json", "信号、T+1 订单与成交证据链；兼容保留 paper_orders.json"],
         ["*_weights.csv", "因子、事件、融合三路回测输入"],
@@ -372,19 +385,20 @@ def build_development() -> Document:
 
     base.add_heading(doc, "8. 测试和本轮证据")
     bullets(doc, [
-        "21/21 unittest 通过；ResourceWarning 按错误处理后仍为零。",
+        "22/22 unittest 通过；ResourceWarning 按错误处理后仍为零。",
         "独立验证覆盖正向 PROMOTE、负向 OOS REJECT、小样本 INCONCLUSIVE、泄漏、未知引用、坏行和非有限场景值。",
+        "integrate 回归覆盖 synthetic 强制分类、缺失/非有限场景拒绝、真实正向样本晋级、过期行情阻断、CLI verify 和 API 制品读取。",
         "新闻服务：1 synthetic event / 2 versions；NVDA/TSM 证据可追溯。",
         "多因子提交：9792ed27059b1179b39cca8fca2982fe22baf86e。",
         "V4：input_mode=prod、validation_state=PASS、cvxpy=1。",
-        "三路 run_backtest.py return code 均为 0；集成门禁 11/11。",
+        "运行 INT-3294801BE2C27699：三路 run_backtest.py 均 PASS；V4 loader PASS；13/13 集成硬门禁通过；event study 8 行。",
         "Paper OMS：T+1_ADJ_CLOSE_PAPER，会计闭合到 0.01。",
     ])
-    para(doc, "两日 synthetic 夹具产生的年化、Sharpe 和换手没有统计意义，只证明接口和执行流程。当前研究决策为 INCONCLUSIVE。")
+    para(doc, "三日 synthetic 夹具产生的年化、Sharpe 和换手没有统计意义，只证明接口和执行流程。5 日主窗口仍无可用事件，当前研究决策为 INCONCLUSIVE。")
 
     base.add_heading(doc, "9. 部署")
     base.add_heading(doc, "9.1 本地只读部署", level=2)
-    para(doc, "启动 serve，并把 artifact directory 指向已验证产物。服务只读取工作区文件；独立验证由 /api/v1/runs/latest/independent-validation 提供；未知路径返回 404，POST 返回 405。")
+    para(doc, "启动 serve，并把 artifact directory 指向已验证产物。服务只读取工作区文件；事件研究和独立验证分别由 /api/v1/runs/latest/event-study 与 /api/v1/runs/latest/independent-validation 提供；未知路径返回 404，POST 返回 405。")
     base.add_heading(doc, "9.2 Docker", level=2)
     para(doc, "Docker 镜像安装核心包并暴露 8080。Compose 挂载 ./artifacts，健康检查 GET /health。部署前应显式选择 integrated artifact directory，而不是把 demo 当生产结果。")
     base.add_heading(doc, "9.3 外部环境", level=2)
