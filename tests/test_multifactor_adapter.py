@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 from evidence_alpha.models import ContractError
@@ -43,3 +44,22 @@ class MultiFactorAdapterTests(unittest.TestCase):
             )
             with self.assertRaises(ContractError):
                 load_weight_panel(path)
+
+    def test_sparse_wide_weights_skip_nan_but_reject_infinity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sparse = root / "sparse.csv"
+            sparse.write_text(
+                "date,NVDA,TSM\n2026-08-18,0.4,nan\n2026-08-19,0.5,0.5\n",
+                encoding="utf-8",
+            )
+            panel = load_weight_panel(sparse)
+            first_day = date(2026, 8, 18)
+            self.assertEqual(panel.weights[first_day], {"NVDA": 0.4})
+
+            invalid = root / "invalid.csv"
+            invalid.write_text(
+                "date,NVDA,TSM\n2026-08-18,0.4,inf\n", encoding="utf-8"
+            )
+            with self.assertRaises(ContractError):
+                load_weight_panel(invalid)

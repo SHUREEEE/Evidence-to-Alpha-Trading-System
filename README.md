@@ -96,6 +96,12 @@ The verified v0.2 integration run produced:
 
 The run used a two-day synthetic factor fixture and one synthetic news event with two immutable versions. Those inputs prove interface and control-flow compatibility only; their annualized statistics and Sharpe have no economic meaning.
 
+## Real-data preflight
+
+The v0.2.1 preflight fixes a causality defect in stale-data handling: T+1 comparisons and Paper fills are now anchored to the integration as-of date, not the factor weight date. A fill must use the first available price date strictly after as-of; otherwise the run is `BLOCKED` and emits no orders or fills. The complete suite passes 15/15 tests, including a July-data/August-event regression.
+
+Current local real artifacts are not fresh enough to run that loop. V3 ends on 2024-12-31; V6.5 weights and NVDA/TSM/SPY TDX prices end on 2026-07-17; the only news event is synthetic and has an August 2026 as-of. The V6.5 manifest also identifies raw-close corporate-action, survivorship, and borrow-proxy limitations. Sanitized evidence is in `evidence/v0.2.1/real_data_preflight.json`.
+
 ## Inputs
 
 - versioned news events and evidence from read-only HTTP GET endpoints;

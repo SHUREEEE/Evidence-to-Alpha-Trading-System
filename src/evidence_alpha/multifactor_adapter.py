@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from math import isfinite
+from math import isfinite, isnan
 from pathlib import Path
 import csv
 from typing import Any
@@ -157,7 +157,7 @@ def load_weight_panel(path: str | Path) -> WeightPanel:
         for row in rows:
             day = _parse_date(row.get(date_column), date_column)
             for ticker, raw in row.items():
-                if ticker in ignored or raw in (None, ""):
+                if ticker in ignored or _is_missing_wide_cell(raw):
                     continue
                 _store_value(weights, day, str(ticker).strip().upper(), float(raw), "weight")
     if not weights:
@@ -183,7 +183,7 @@ def load_price_panel(path: str | Path) -> PricePanel:
         for row in rows:
             day = _parse_date(row.get(date_column), date_column)
             for ticker, raw in row.items():
-                if ticker == date_column or raw in (None, ""):
+                if ticker == date_column or _is_missing_wide_cell(raw):
                     continue
                 value = float(raw)
                 if value <= 0:
@@ -192,6 +192,15 @@ def load_price_panel(path: str | Path) -> PricePanel:
     if not prices:
         raise ContractError("adjusted-close price panel is empty")
     return PricePanel(adj_close=prices, source_path=source)
+
+
+def _is_missing_wide_cell(value: Any) -> bool:
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return True
+    try:
+        return isnan(float(value))
+    except (TypeError, ValueError):
+        return False
 
 
 def _store_value(

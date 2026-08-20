@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "preflight_id": "PREFLIGHT-20260821-REAL-DATA",
+  "created_at": "2026-08-21T04:07:24.8959983+08:00",
+  "decision": "BLOCKED",
+  "continuous_paper_ready": false,
+  "live_ready": false,
+  "code": {
+    "repository": "SHUREEEE/Evidence-to-Alpha-Trading-System",
+    "baseline_commit": "38295cccab00a74d671bdd66642b0cb79708776d",
+    "tests_passed": 15,
+    "tests_failed": 0,
+    "causality_fix": {
+      "execution_anchor": "integration as-of date",
+      "fill_rule": "first available price date strictly after execution anchor",
+      "missing_post_asof_price_behavior": "BLOCKED with zero orders and zero fills",
+      "hard_gate": "paper_fill_after_asof"
+    }
+  },
+  "local_deployment": {
+    "verified_at": "2026-08-21T04:20:02.0337439+08:00",
+    "service": "http://127.0.0.1:8080",
+    "service_version": "0.2.1",
+    "artifact_run_id": "INT-21959353434E657B",
+    "artifact_scope": "sealed v0.2.0 synthetic research fixture",
+    "health_status": "ok",
+    "artifact_ready": true,
+    "write_method_status": 405,
+    "note": "Service availability does not clear real-data or live gates."
+  },
+  "news": {
+    "adapter": "news-claws-v1-read-only",
+    "service": "http://127.0.0.1:8765",
+    "event_count": 1,
+    "event_version_count": 2,
+    "event_asof_min_utc": "2026-08-19T01:00:00+00:00",
+    "event_asof_max_utc": "2026-08-19T01:08:00+00:00",
+    "mapped_tickers": [
+      "NVDA",
+      "TSM"
+    ],
+    "synthetic": true,
+    "synthetic_event_refs": [
+      "evt_5ace256258336f7b:v2"
+    ],
+    "non_synthetic_export_rejected": true,
+    "non_synthetic_export_rejection_class": "ContractError"
+  },
+  "multi_factor_source": {
+    "repository": "SHUREEEE/multi-factor-alpha-platform",
+    "branch": "codex/v6-tdx-us-research",
+    "commit": "365e53e5e85cfa2ee2f530403f3d934cd38b8ca3",
+    "inspected_read_only": true,
+    "worktree_clean": false
+  },
+  "v3": {
+    "weights": {
+      "logical_path": "results/pillar5_artifacts/v3_weights.parquet",
+      "sha256": "CC90916E3411E78B8C8C385E99F1F7DE5F5212108991E6E0D504FF8E1446506A",
+      "shape": [
+        2768,
+        516
+      ],
+      "calendar_start": "2014-01-02",
+      "effective_nonzero_start": "2014-04-01",
+      "end": "2024-12-31",
+      "ticker_count": 516,
+      "contains_nvda": true,
+      "contains_tsm": false
+    },
+    "prices": {
+      "logical_path": "data/processed/prices.parquet",
+      "sha256": "7E2250A1A65239630A5EA96D6501CA746424B0F207B57FC7F4E3E0C69B8BC32C",
+      "row_count": 1371595,
+      "start": "2014-01-02",
+      "end": "2024-12-31",
+      "price_field_available": "adj_close"
+    },
+    "sectors": {
+      "logical_path": "results/pillar5_artifacts/v3_sector_map.csv",
+      "sha256": "D5CE85AFE918D35A4559D47EA6F5F9E754FA873996A8F906F20403B920903925",
+      "row_count": 516
+    }
+  },
+  "v6_5_oos_2026_ytd": {
+    "weights": {
+      "logical_path": "results/tdx_us_v65_oos/2026_ytd/weights.parquet",
+      "sha256": "40486C2FEF037286A9BE48C7D24ABFFC01F15A65DC4CEFF3B3CC8F7705A9E756",
+      "row_count": 298890,
+      "date_count": 135,
+      "start": "2026-01-02",
+      "end": "2026-07-17",
+      "ticker_count": 2214,
+      "contains_nvda": true,
+      "contains_tsm": true
+    },
+    "manifest": {
+      "logical_path": "results/tdx_us_v65_oos/2026_ytd/manifest.json",
+      "sha256": "955097A72F8E346F124DE45791F1DE4A65FF41F1A6C5FD24D52EC787808D96E6",
+      "price_adjustment": "raw_close_with_abs_returns_over_35pct_masked",
+      "warnings": [
+        "Dividends and smaller corporate actions remain unadjusted.",
+        "The current-constituent universe retains survivorship bias.",
+        "Borrow cost is a 50 bps annual proxy without historical security-level availability."
+      ]
+    }
+  },
+  "tdx_price_freshness": {
+    "record_format": "<IfffffII",
+    "NVDA": {
+      "logical_file": "74#NVDA.day",
+      "last_date": "2026-07-17",
+      "sha256": "B5C8D4252E011B31D707F0933186AEC4742B2D0ECA0EDC08C9E208BAD728FD5A"
+    },
+    "TSM": {
+      "logical_file": "74#TSM.day",
+      "last_date": "2026-07-17",
+      "sha256": "AE261E190E96F44A6705196965522D2C47CD30684D4B8D109A474D2A9EF60D4E"
+    },
+    "SPY": {
+      "logical_file": "74#SPY.day",
+      "last_date": "2026-07-17",
+      "sha256": "2FEEAB7EDCC00A0E18C00E3BD4CC1D666446E4EFA0C87BB45745AA8510F69961"
+    }
+  },
+  "gates": {
+    "news_is_non_synthetic": false,
+    "factor_weights_cover_event_asof": false,
+    "post_asof_t_plus_one_price_exists": false,
+    "price_series_is_corporate_action_safe": false,
+    "historical_security_level_borrow_exists": false,
+    "causality_regression_test_passed": true
+  },
+  "hard_failures": [
+    "news_is_non_synthetic",
+    "factor_weights_cover_event_asof",
+    "post_asof_t_plus_one_price_exists",
+    "price_series_is_corporate_action_safe",
+    "historical_security_level_borrow_exists"
+  ],
+  "required_next_inputs": [
+    "At least one non-synthetic, evidence-backed event from the read-only news service.",
+    "Factor weights refreshed through the event as-of date.",
+    "Corporate-action-safe prices through at least the first trading date after the event as-of date.",
+    "A documented decision on real borrow availability before any short-side production use."
+  ],
+  "conclusion": "Do not start continuous Paper or live execution with the current artifacts. Refresh news, weights, and prices, then rerun the fail-closed integration."
+}
