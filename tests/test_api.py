@@ -24,6 +24,10 @@ class ApiTests(unittest.TestCase):
                 json.dumps([{"fill_id": "FILL-1", "order_id": "ORDER-1"}]),
                 encoding="utf-8",
             )
+            (artifact_dir / "independent_validation.json").write_text(
+                json.dumps({"decision": "INCONCLUSIVE"}),
+                encoding="utf-8",
+            )
             handler = type(
                 "TestArtifactHandler", (ArtifactHandler,), {"artifact_dir": artifact_dir}
             )
@@ -38,11 +42,18 @@ class ApiTests(unittest.TestCase):
                     fills = json.load(response)
                 self.assertEqual(orders[0]["order_id"], "ORDER-1")
                 self.assertEqual(fills[0]["fill_id"], "FILL-1")
+                with urlopen(
+                    f"{base_url}/api/v1/runs/latest/independent-validation",
+                    timeout=5,
+                ) as response:
+                    independent = json.load(response)
+                self.assertEqual(independent["decision"], "INCONCLUSIVE")
 
                 request = Request(f"{base_url}/api/v1/runs/latest", method="POST")
                 with self.assertRaises(HTTPError) as rejected:
                     urlopen(request, timeout=5)
                 self.assertEqual(rejected.exception.code, 405)
+                rejected.exception.close()
             finally:
                 server.shutdown()
                 server.server_close()

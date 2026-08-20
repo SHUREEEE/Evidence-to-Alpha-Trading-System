@@ -1,0 +1,82 @@
+{
+  "release": "v0.3.0",
+  "verified_at": "2026-08-21",
+  "test_command": "python -W error::ResourceWarning -m unittest discover -s tests -v",
+  "tests_passed": 21,
+  "tests_failed": 0,
+  "resource_warnings": 0,
+  "compile_checks": "passed",
+  "diff_check": "passed",
+  "demo": {
+    "run_id": "RUN-25ECC87FAC46A1DE",
+    "data_classification": "synthetic",
+    "report_decision": "INCONCLUSIVE",
+    "audit_decision": "INCONCLUSIVE",
+    "independent_validation_decision": "INCONCLUSIVE",
+    "hard_failures": 0,
+    "usable_primary_window_events": 2,
+    "in_sample_events": 1,
+    "out_of_sample_events": 1,
+    "rolling_folds": 3,
+    "complete_rolling_folds": 1,
+    "partition_disjoint": true,
+    "sqlite_integrity": "ok"
+  },
+  "artifact_sha256": {
+    "report.json": "4ed5bbdc42dbb551bb3e480052514681bc5ba55f7bb33de5ddde0fb68a3d166f",
+    "audit.json": "1c2aabcbcdcd5b275dd87026874e93c6c6d9fede7398246d43b21715e10eabab",
+    "independent_validation.json": "4eabde3b62a405b5719231c8e655f7ee70f66b3fea73a5928d3f2bcfd5afe3cb",
+    "event_study.csv": "f1ffc4e68f9f54121cf8913cd980f1d69c184e7b17dc611323f32fa310027b4e",
+    "ledger.sqlite3": "e1fb938b13f00ee85e5c244088caba9a2bbb6bff3cd25e2e9b30b30d8226f009"
+  },
+  "api_smoke": {
+    "health": 200,
+    "version": "0.3.0",
+    "artifact_ready": true,
+    "latest_report": 200,
+    "independent_validation": 200,
+    "endpoint_listed": true,
+    "write_method": "405 read_only_service",
+    "unknown_route": 404
+  },
+  "documents": {
+    "selection_pages": 4,
+    "prd_pages": 5,
+    "development_pages": 6,
+    "all_pages_visually_inspected": true,
+    "visual_renderer": "Microsoft Word hidden PDF export plus Poppler PNG rasterization",
+    "canonical_libreoffice_renderer": "unavailable: soffice is not installed",
+    "zip_integrity": "passed",
+    "table_geometry": "passed",
+    "heading_hierarchy": "passed",
+    "accessibility_findings": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "sha256": {
+      "selection": "22c8edee6aae4a6223fcb63d0a6febd00715cdb1d6f35059bcf797b2049a8bf6",
+      "prd": "8bc6bd229249c7ca0c2c5b1debc677ffd94f0d862c6652ddd389952f8035c4a9",
+      "development": "e97c6b06b930f4f581b7ab34140850be719db3e4ccf85983cef63dda281c9e4f"
+    }
+  },
+  "deployment": {
+    "scope": "local read-only research/Paper artifact service",
+    "url": "http://127.0.0.1:8080",
+    "process_id_at_verification": 72344,
+    "internet_or_cloud_deployment": false,
+    "broker_connection": false,
+    "real_order_write_path": false
+  },
+  "real_data_gate": {
+    "status": "BLOCKED",
+    "reasons": [
+      "news input is synthetic",
+      "V3 ends 2024-12-31",
+      "V6.5 and TDX end 2026-07-17 before the August 2026 event",
+      "corporate-action, survivorship, and borrow-proxy risks remain"
+    ]
+  },
+  "human_production_verifier": "pending",
+  "production_release": "blocked"
+}

@@ -32,7 +32,7 @@ class ArtifactHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path.rstrip("/") or "/"
         if path == "/":
-            self._send(200, {"service": "evidence-alpha", "version": __version__, "read_only": True, "endpoints": ["/health", "/api/v1/runs/latest", "/api/v1/runs/latest/signals", "/api/v1/runs/latest/orders", "/api/v1/runs/latest/fills", "/api/v1/runs/latest/event-study"]})
+            self._send(200, {"service": "evidence-alpha", "version": __version__, "read_only": True, "endpoints": ["/health", "/api/v1/runs/latest", "/api/v1/runs/latest/signals", "/api/v1/runs/latest/orders", "/api/v1/runs/latest/fills", "/api/v1/runs/latest/event-study", "/api/v1/runs/latest/independent-validation"]})
             return
         if path == "/health":
             self._send(200, {"status": "ok", "version": __version__, "artifact_ready": self._json_file("report.json") is not None})
@@ -42,6 +42,9 @@ class ArtifactHandler(BaseHTTPRequestHandler):
             "/api/v1/runs/latest/signals": ("signals.json",),
             "/api/v1/runs/latest/orders": ("orders.json", "paper_orders.json"),
             "/api/v1/runs/latest/fills": ("fills.json",),
+            "/api/v1/runs/latest/independent-validation": (
+                "independent_validation.json",
+            ),
         }
         if path in mapping:
             payload = self._json_file(*mapping[path])

@@ -21,6 +21,7 @@ def validate_run(
     portfolio: dict[str, object],
     oms_summary: dict[str, object],
     scenarios: dict[str, object],
+    independent_validation: dict[str, object],
     unmapped: list[dict[str, str]],
     minimum_event_count: int = 30,
 ) -> dict[str, object]:
@@ -79,6 +80,24 @@ def validate_run(
             "baseline, overlay, one-day delay, placebo, and doubled-cost outputs are recorded",
         ),
         _gate(
+            "independent_validation_integrity",
+            not independent_validation.get("hard_failures"),
+            (
+                "hard failures="
+                f"{independent_validation.get('hard_failures', [])}"
+            ),
+        ),
+        _gate(
+            "independent_validation_research",
+            independent_validation.get("decision") == "PROMOTE",
+            (
+                f"decision={independent_validation.get('decision')}; "
+                f"research failures="
+                f"{independent_validation.get('research_failures', [])}"
+            ),
+            severity="research",
+        ),
+        _gate(
             "mapping_disclosure",
             True,
             f"{len(unmapped)} unmapped entity records disclosed",
@@ -95,19 +114,15 @@ def validate_run(
     if hard_failures:
         decision = "REJECT"
         rationale = "One or more integrity gates failed."
-    elif len(visible_events) < minimum_event_count:
+    elif independent_validation.get("decision") == "INCONCLUSIVE":
         decision = "INCONCLUSIVE"
-        rationale = "Integrity gates passed, but the event sample is too small for a promotion claim."
+        rationale = str(independent_validation.get("rationale"))
+    elif independent_validation.get("decision") == "PROMOTE":
+        decision = "PROMOTE"
+        rationale = str(independent_validation.get("rationale"))
     else:
-        overlay = scenarios.get("overlay")
-        baseline = scenarios.get("baseline")
-        double_cost = scenarios.get("double_cost")
-        if all(isinstance(value, (int, float)) for value in (overlay, baseline, double_cost)) and overlay > baseline and double_cost > baseline:
-            decision = "PROMOTE"
-            rationale = "Overlay exceeds the independent factor baseline and remains positive under doubled costs."
-        else:
-            decision = "REJECT"
-            rationale = "The event overlay did not demonstrate stable incremental value."
+        decision = "REJECT"
+        rationale = str(independent_validation.get("rationale"))
     return {
         "decision": decision,
         "rationale": rationale,
@@ -125,4 +140,3 @@ def validate_run(
             "Real execution quality and production capacity remain unknown without broker and market-impact data."
         ],
     }
-

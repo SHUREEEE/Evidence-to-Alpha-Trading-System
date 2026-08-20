@@ -72,5 +72,11 @@ def generate_demo_inputs(root: str | Path) -> dict[str, Path]:
 
 def run_demo(output_dir: str | Path):
     paths = generate_demo_inputs(output_dir)
-    return run_pipeline(**paths, output_dir=output_dir, config=config_from_cutoff("2026-01-16T08:00:00+00:00"))
-
+    return run_pipeline(
+        **paths,
+        output_dir=output_dir,
+        config=config_from_cutoff(
+            "2026-01-16T08:00:00+00:00",
+            data_classification="synthetic",
+        ),
+    )

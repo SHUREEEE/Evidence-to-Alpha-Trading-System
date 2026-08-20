@@ -26,6 +26,17 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--cutoff", required=True, help="timezone-aware ISO-8601 timestamp")
     run.add_argument("--benchmark", default="SPY")
     run.add_argument("--minimum-event-count", type=int, default=30)
+    run.add_argument(
+        "--data-classification",
+        choices=("unknown", "synthetic", "real"),
+        default="unknown",
+    )
+    run.add_argument("--oos-fraction", type=float, default=0.30)
+    run.add_argument("--minimum-oos-events", type=int, default=10)
+    run.add_argument("--rolling-folds", type=int, default=3)
+    run.add_argument(
+        "--primary-window-days", type=int, choices=(1, 3, 5, 20), default=5
+    )
     run.add_argument("--output-dir", required=True)
     news_export = sub.add_parser(
         "news-export", help="export immutable event versions from the read-only News Claws API"
@@ -73,7 +84,24 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"run_id": report["run_id"], "decision": report["decision"], "output_dir": args.output_dir}, indent=2))
         return 0
     if args.command == "run":
-        report = run_pipeline(events_path=args.events, evidence_path=args.evidence, mappings_path=args.mappings, prices_path=args.prices, baseline_weights_path=args.baseline_weights, output_dir=args.output_dir, config=config_from_cutoff(args.cutoff, benchmark=args.benchmark, minimum_event_count=args.minimum_event_count))
+        report = run_pipeline(
+            events_path=args.events,
+            evidence_path=args.evidence,
+            mappings_path=args.mappings,
+            prices_path=args.prices,
+            baseline_weights_path=args.baseline_weights,
+            output_dir=args.output_dir,
+            config=config_from_cutoff(
+                args.cutoff,
+                benchmark=args.benchmark,
+                minimum_event_count=args.minimum_event_count,
+                data_classification=args.data_classification,
+                oos_fraction=args.oos_fraction,
+                minimum_oos_events=args.minimum_oos_events,
+                rolling_folds=args.rolling_folds,
+                primary_window_days=args.primary_window_days,
+            ),
+        )
         print(json.dumps({"run_id": report["run_id"], "decision": report["decision"]}, indent=2))
         return 0
     if args.command == "news-export":
