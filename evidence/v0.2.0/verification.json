@@ -1,0 +1,47 @@
+{
+  "release": "v0.2.0",
+  "verified_at": "2026-08-20",
+  "test_command": "python -m unittest discover -s tests -v",
+  "tests_passed": 13,
+  "tests_failed": 0,
+  "compile_checks": "passed",
+  "integration": {
+    "run_id": "INT-21959353434E657B",
+    "gates_passed": 11,
+    "gates_failed": 0,
+    "v4_prod_loader": "PASS",
+    "external_backtests_passed": 3,
+    "paper_orders": 1,
+    "paper_fills": 1,
+    "reconciled_to_cent": true,
+    "decision": "INCONCLUSIVE",
+    "live_launch": "BLOCKED"
+  },
+  "api_smoke": {
+    "health": 200,
+    "latest_report": 200,
+    "signals": 200,
+    "orders": 200,
+    "fills": 200,
+    "write_method": "405 read_only_service",
+    "unknown_route": 404
+  },
+  "documents": {
+    "selection_pages": 4,
+    "prd_pages": 5,
+    "development_pages": 5,
+    "all_pages_visually_inspected": true,
+    "table_geometry": "passed",
+    "repeating_headers": "passed",
+    "cant_split_rows": "passed",
+    "fixed_row_heights": 0,
+    "accessibility_findings": {"high": 0, "medium": 0, "low": 0}
+  },
+  "docker": {
+    "configuration_present": true,
+    "image_built_here": false,
+    "reason": "Docker CLI is not installed in the current environment"
+  },
+  "human_production_verifier": "pending",
+  "production_release": "blocked"
+}

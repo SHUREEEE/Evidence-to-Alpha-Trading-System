@@ -9,5 +9,5 @@ COPY src ./src
 RUN pip install --no-cache-dir .
 
 EXPOSE 8080
-CMD ["python", "-m", "evidence_alpha", "serve", "--host", "0.0.0.0", "--port", "8080", "--artifact-dir", "/app/artifacts/demo", "--bootstrap-demo"]
+CMD ["python", "-m", "evidence_alpha", "serve", "--host", "0.0.0.0", "--port", "8080", "--artifact-dir", "/app/artifacts/integrated-live-v0.2"]
 

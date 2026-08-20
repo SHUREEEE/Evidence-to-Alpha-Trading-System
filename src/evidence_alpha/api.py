@@ -22,9 +22,12 @@ class ArtifactHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _json_file(self, name: str):
-        path = self.artifact_dir / name
-        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    def _json_file(self, *names: str):
+        for name in names:
+            path = self.artifact_dir / name
+            if path.exists():
+                return json.loads(path.read_text(encoding="utf-8"))
+        return None
 
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path.rstrip("/") or "/"
@@ -34,9 +37,14 @@ class ArtifactHandler(BaseHTTPRequestHandler):
         if path == "/health":
             self._send(200, {"status": "ok", "version": __version__, "artifact_ready": self._json_file("report.json") is not None})
             return
-        mapping = {"/api/v1/runs/latest": "report.json", "/api/v1/runs/latest/signals": "signals.json", "/api/v1/runs/latest/orders": "orders.json", "/api/v1/runs/latest/fills": "fills.json"}
+        mapping = {
+            "/api/v1/runs/latest": ("report.json",),
+            "/api/v1/runs/latest/signals": ("signals.json",),
+            "/api/v1/runs/latest/orders": ("orders.json", "paper_orders.json"),
+            "/api/v1/runs/latest/fills": ("fills.json",),
+        }
         if path in mapping:
-            payload = self._json_file(mapping[path])
+            payload = self._json_file(*mapping[path])
             self._send(200 if payload is not None else 404, payload or {"error": "artifact_not_found"})
             return
         if path == "/api/v1/runs/latest/event-study":

@@ -1,0 +1,49 @@
+{
+  "release": "v0.2.0",
+  "run_id": "INT-21959353434E657B",
+  "created_at": "2026-08-20T22:31:29.616371+08:00",
+  "asof": "2026-08-19T20:00:00+08:00",
+  "status": "READY_FOR_PAPER_RESEARCH",
+  "decision": "INCONCLUSIVE",
+  "live_launch": "BLOCKED",
+  "architecture": [
+    "news_evidence",
+    "event_alpha",
+    "factor_plus_event_pre_v4",
+    "v4_portfolio_controls",
+    "t_plus_one_backtest_and_paper_oms",
+    "attribution_feedback"
+  ],
+  "counts": {
+    "visible_events": 1,
+    "news_event_versions": 2,
+    "signals": 2,
+    "paper_orders": 1,
+    "paper_fills": 1
+  },
+  "news": {
+    "adapter": "news-claws-v1-read-only",
+    "base_url": "http://127.0.0.1:8765",
+    "synthetic": true,
+    "synthetic_allowed_for_fixture": true
+  },
+  "multi_factor": {
+    "commit": "9792ed27059b1179b39cca8fca2982fe22baf86e",
+    "v4_input_mode": "prod",
+    "v4_validation_state": "PASS",
+    "v4_solver_path_counts": {"cvxpy": 1},
+    "borrow_feed_present": false,
+    "external_backtests_passed": 3
+  },
+  "paper_oms": {
+    "execution_model": "T+1_ADJ_CLOSE_PAPER",
+    "fill_date": "2026-08-20",
+    "closed_to_cent": true
+  },
+  "limitations": [
+    "The comparison is a one-step T+1 diagnostic, not an OOS performance claim.",
+    "The fixture uses synthetic news and two days of synthetic factor data.",
+    "V4 risk controls remain owned and executed by multi-factor-alpha-platform.",
+    "No broker or real-money execution path exists."
+  ]
+}

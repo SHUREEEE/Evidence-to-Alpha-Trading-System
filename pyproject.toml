@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "evidence-alpha"
-version = "0.1.0"
+version = "0.2.0"
 description = "Point-in-time evidence-to-alpha research and paper-trading pipeline"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Evidence-to-Alpha Project"}]
 dependencies = []
+
+[project.optional-dependencies]
+integrations = ["pandas>=2.0", "pyarrow>=14"]
 
 [project.scripts]
 evidence-alpha = "evidence_alpha.cli:main"
