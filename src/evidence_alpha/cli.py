@@ -7,6 +7,8 @@ import sys
 
 from .api import serve
 from .demo import run_demo
+from .integration import config_from_asof, run_integration
+from .news_adapter import NewsAdapter, write_news_export
 from .pipeline import config_from_cutoff, run_pipeline
 
 
@@ -25,6 +27,35 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--benchmark", default="SPY")
     run.add_argument("--minimum-event-count", type=int, default=30)
     run.add_argument("--output-dir", required=True)
+    news_export = sub.add_parser(
+        "news-export", help="export immutable event versions from the read-only News Claws API"
+    )
+    news_export.add_argument("--news-base-url", default="http://127.0.0.1:8765")
+    news_export.add_argument("--limit", type=int, default=100)
+    news_export.add_argument("--allow-synthetic", action="store_true")
+    news_export.add_argument("--output-dir", required=True)
+    integrate = sub.add_parser(
+        "integrate",
+        help="fuse News Claws event alpha into multi-factor weights before V4 controls",
+    )
+    integrate.add_argument("--news-base-url", default="http://127.0.0.1:8765")
+    integrate.add_argument("--factor-root", required=True)
+    integrate.add_argument("--weights", help="override V3 weights path, relative to factor root")
+    integrate.add_argument("--sectors", help="override V3 sector-map path, relative to factor root")
+    integrate.add_argument("--prices", help="override adjusted-close path, relative to factor root")
+    integrate.add_argument("--asof", required=True, help="timezone-aware ISO-8601 timestamp")
+    integrate.add_argument("--news-limit", type=int, default=100)
+    integrate.add_argument("--allow-synthetic-news", action="store_true")
+    integrate.add_argument("--overlay-scale", type=float, default=0.02)
+    integrate.add_argument("--max-overlay-per-name", type=float, default=0.01)
+    integrate.add_argument("--overlay-turnover-cap", type=float, default=0.08)
+    integrate.add_argument("--cost-bps", type=float, default=5.0)
+    integrate.add_argument("--minimum-universe-overlap", type=float, default=0.50)
+    integrate.add_argument("--paper-nav", type=float, default=100000.0)
+    integrate.add_argument("--skip-parquet-staging", action="store_true")
+    integrate.add_argument("--run-factor-v4", action="store_true")
+    integrate.add_argument("--run-factor-backtests", action="store_true")
+    integrate.add_argument("--output-dir", required=True)
     verify = sub.add_parser("verify", help="verify an existing artifact directory")
     verify.add_argument("--artifact-dir", default="artifacts/demo")
     service = sub.add_parser("serve", help="serve artifacts through a read-only HTTP API")
@@ -45,6 +76,60 @@ def main(argv: list[str] | None = None) -> int:
         report = run_pipeline(events_path=args.events, evidence_path=args.evidence, mappings_path=args.mappings, prices_path=args.prices, baseline_weights_path=args.baseline_weights, output_dir=args.output_dir, config=config_from_cutoff(args.cutoff, benchmark=args.benchmark, minimum_event_count=args.minimum_event_count))
         print(json.dumps({"run_id": report["run_id"], "decision": report["decision"]}, indent=2))
         return 0
+    if args.command == "news-export":
+        bundle = NewsAdapter(args.news_base_url).export(
+            limit=args.limit, allow_synthetic=args.allow_synthetic
+        )
+        paths = write_news_export(bundle, args.output_dir)
+        print(
+            json.dumps(
+                {
+                    "event_versions": len(bundle.events),
+                    "synthetic": bundle.manifest["synthetic"],
+                    "output_dir": args.output_dir,
+                    "paths": {key: str(value) for key, value in paths.items()},
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+    if args.command == "integrate":
+        report = run_integration(
+            news_base_url=args.news_base_url,
+            factor_root=args.factor_root,
+            weights_path=args.weights,
+            sectors_path=args.sectors,
+            prices_path=args.prices,
+            output_dir=args.output_dir,
+            news_limit=args.news_limit,
+            allow_synthetic_news=args.allow_synthetic_news,
+            write_parquet_staging=not args.skip_parquet_staging,
+            run_factor_v4=args.run_factor_v4,
+            run_factor_backtests=args.run_factor_backtests,
+            config=config_from_asof(
+                args.asof,
+                overlay_scale=args.overlay_scale,
+                max_overlay_per_name=args.max_overlay_per_name,
+                overlay_turnover_cap=args.overlay_turnover_cap,
+                cost_bps=args.cost_bps,
+                minimum_universe_overlap=args.minimum_universe_overlap,
+                paper_nav=args.paper_nav,
+            ),
+        )
+        print(
+            json.dumps(
+                {
+                    "run_id": report["run_id"],
+                    "status": report["status"],
+                    "decision": report["decision"],
+                    "live_launch": report["live_launch"]["decision"],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1 if report["hard_failures"] else 0
     if args.command == "verify":
         source = Path(args.artifact_dir) / "audit.json"
         if not source.exists():

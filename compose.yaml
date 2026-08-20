@@ -3,8 +3,12 @@ services:
     build: .
     ports:
       - "8080:8080"
+    command: ["python", "-m", "evidence_alpha", "serve", "--host", "0.0.0.0", "--port", "8080", "--artifact-dir", "${EVIDENCE_ALPHA_ARTIFACT_DIR:-/app/artifacts/integrated-live-v0.2}"]
     volumes:
-      - ./artifacts:/app/artifacts
+      - ./artifacts:/app/artifacts:ro
+    read_only: true
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
       interval: 10s

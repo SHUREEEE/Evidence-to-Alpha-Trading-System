@@ -1,0 +1,49 @@
+import json
+import tempfile
+import threading
+import unittest
+from http.server import ThreadingHTTPServer
+from pathlib import Path
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
+
+from evidence_alpha.api import ArtifactHandler
+
+
+class ApiTests(unittest.TestCase):
+    def test_read_only_api_serves_legacy_orders_and_standard_fills(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact_dir = Path(directory)
+            (artifact_dir / "report.json").write_text(
+                json.dumps({"run_id": "INT-TEST"}), encoding="utf-8"
+            )
+            (artifact_dir / "paper_orders.json").write_text(
+                json.dumps([{"order_id": "ORDER-1"}]), encoding="utf-8"
+            )
+            (artifact_dir / "fills.json").write_text(
+                json.dumps([{"fill_id": "FILL-1", "order_id": "ORDER-1"}]),
+                encoding="utf-8",
+            )
+            handler = type(
+                "TestArtifactHandler", (ArtifactHandler,), {"artifact_dir": artifact_dir}
+            )
+            server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_port}"
+            try:
+                with urlopen(f"{base_url}/api/v1/runs/latest/orders", timeout=5) as response:
+                    orders = json.load(response)
+                with urlopen(f"{base_url}/api/v1/runs/latest/fills", timeout=5) as response:
+                    fills = json.load(response)
+                self.assertEqual(orders[0]["order_id"], "ORDER-1")
+                self.assertEqual(fills[0]["fill_id"], "FILL-1")
+
+                request = Request(f"{base_url}/api/v1/runs/latest", method="POST")
+                with self.assertRaises(HTTPError) as rejected:
+                    urlopen(request, timeout=5)
+                self.assertEqual(rejected.exception.code, 405)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
