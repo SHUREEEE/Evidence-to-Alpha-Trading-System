@@ -1,0 +1,21 @@
+{
+  "decision": "INCONCLUSIVE",
+  "gates": {
+    "event_lineage": true,
+    "factor_asof_not_future": true,
+    "independent_validation_integrity": true,
+    "multi_factor_three_backtests": true,
+    "multi_factor_v4_prod_loader": true,
+    "news_read_only_contract": true,
+    "paper_fill_after_asof": true,
+    "paper_reconciliation": true,
+    "point_in_time_versions": true,
+    "pre_v4_overlay_turnover": true,
+    "pre_v4_overlay_zero_sum": true,
+    "t_plus_one_prices": true,
+    "universe_overlap": true
+  },
+  "hard_failures": [],
+  "independent_validation_hard_failures": [],
+  "integration_hard_failures": []
+}

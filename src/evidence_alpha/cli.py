@@ -74,6 +74,22 @@ def _parser() -> argparse.ArgumentParser:
     service.add_argument("--host", default="127.0.0.1")
     service.add_argument("--port", type=int, default=8080)
     service.add_argument("--bootstrap-demo", action="store_true")
+    integrate.add_argument('--benchmark', default='SPY')
+    integrate.add_argument(
+        '--data-classification',
+        choices=('unknown', 'synthetic', 'real'),
+        default='unknown',
+    )
+    integrate.add_argument('--minimum-event-count', type=int, default=30)
+    integrate.add_argument('--oos-fraction', type=float, default=0.30)
+    integrate.add_argument('--minimum-oos-events', type=int, default=10)
+    integrate.add_argument('--rolling-folds', type=int, default=3)
+    integrate.add_argument(
+        '--primary-window-days',
+        type=int,
+        choices=(1, 3, 5, 20),
+        default=5,
+    )
     return parser
 
 
@@ -137,6 +153,13 @@ def main(argv: list[str] | None = None) -> int:
             run_factor_backtests=args.run_factor_backtests,
             config=config_from_asof(
                 args.asof,
+                benchmark=args.benchmark,
+                data_classification=args.data_classification,
+                minimum_event_count=args.minimum_event_count,
+                oos_fraction=args.oos_fraction,
+                minimum_oos_events=args.minimum_oos_events,
+                rolling_folds=args.rolling_folds,
+                primary_window_days=args.primary_window_days,
                 overlay_scale=args.overlay_scale,
                 max_overlay_per_name=args.max_overlay_per_name,
                 overlay_turnover_cap=args.overlay_turnover_cap,

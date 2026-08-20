@@ -1,0 +1,99 @@
+{
+  "release": "v0.4.0",
+  "verified_at": "2026-08-21",
+  "compile_command": "python -m compileall -q src tests scripts\\build_docs_v2.py",
+  "test_command": "python -W error::ResourceWarning -m unittest discover -s tests -v",
+  "artifact_verify_command": "python -m evidence_alpha verify --artifact-dir artifacts\\integrated-v0.4",
+  "tests_passed": 22,
+  "tests_failed": 0,
+  "resource_warnings": 0,
+  "compile_checks": "passed",
+  "diff_check": "passed",
+  "artifact_verify_exit": 0,
+  "integration": {
+    "run_id": "INT-3294801BE2C27699",
+    "status": "READY_FOR_PAPER_RESEARCH",
+    "data_classification": "synthetic",
+    "report_decision": "INCONCLUSIVE",
+    "audit_decision": "INCONCLUSIVE",
+    "independent_validation_decision": "INCONCLUSIVE",
+    "live_decision": "BLOCKED",
+    "integration_hard_gates_passed": 13,
+    "integration_hard_gates_total": 13,
+    "hard_failures": 0,
+    "event_study_rows": 8,
+    "usable_primary_window_events": 0,
+    "v4_loader": "PASS",
+    "external_backtests_passed": 3,
+    "external_backtests_total": 3,
+    "scenario_returns": {
+      "baseline": 0.0041131006584277765,
+      "overlay": 0.004129451031979092,
+      "placebo": 0.004055510448532329,
+      "one_day_delay": 0.0010160567148982161,
+      "double_cost": 0.004077310054148318
+    }
+  },
+  "artifact_sha256": {
+    "report.json": "e5774dd50c892cdf972d1f5a9277d81e7538657ad374216f632d2524a9a81b0f",
+    "audit.json": "c06fad2195e64c317030421a084152c0386cb3c0f17bce743094668b59872237",
+    "integration_audit.json": "bbc392d0e5107d6c0328d39270bd4a8252a98b9cd595b81dcfecca0802a7d8bb",
+    "independent_validation.json": "53399d4d9faca5451f8b56ddb374a5536b0f80d87d945a6f2cc8c9744e5b6b1c",
+    "event_study.csv": "4c8fcdf878cf5a2a40b75558067441b432881ac4c2f49c4eef0fab0eaeb2b0c4"
+  },
+  "api_smoke": {
+    "root": 200,
+    "read_only": true,
+    "health": 200,
+    "version": "0.4.0",
+    "artifact_ready": true,
+    "report": 200,
+    "run_id": "INT-3294801BE2C27699",
+    "event_study": 200,
+    "event_study_rows": 8,
+    "independent_validation": 200,
+    "write_method": "405 read_only_service",
+    "unknown_route": 404
+  },
+  "documents": {
+    "selection_pages": 4,
+    "prd_pages": 5,
+    "development_pages": 6,
+    "all_pages_visually_inspected": true,
+    "visual_renderer": "Microsoft Word hidden PDF export plus Poppler PNG rasterization",
+    "canonical_libreoffice_renderer": "unavailable: soffice is not installed",
+    "zip_integrity": "passed",
+    "table_geometry": "passed",
+    "heading_hierarchy": "passed",
+    "accessibility_findings": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "sha256": {
+      "selection": "f6ec82cd5ecc2cb51213dcddb3dbae361c64f5b5d2e111b10dced98760fdcaac",
+      "prd": "10673ce015f7bce44d0acacc376d08408ba42e379cc2339206cb3a846f2a1856",
+      "development": "54babf91df6252d832d0e13ceb555e38951deb5bb305844bf506e885ceac56ec"
+    }
+  },
+  "deployment": {
+    "scope": "local read-only research/Paper artifact service",
+    "url": "http://127.0.0.1:8080",
+    "process_id_at_verification": 71332,
+    "internet_or_cloud_deployment": false,
+    "broker_connection": false,
+    "real_order_write_path": false
+  },
+  "real_data_gate": {
+    "status": "BLOCKED",
+    "reasons": [
+      "news input is synthetic",
+      "the five-day primary window has no usable events",
+      "doubled-cost overlay does not beat factor baseline",
+      "real weights and prices are stale relative to the August 2026 event",
+      "corporate-action, survivorship, capacity, and borrow limitations remain"
+    ]
+  },
+  "human_production_verifier": "pending",
+  "production_release": "blocked"
+}
