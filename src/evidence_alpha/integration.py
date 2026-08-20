@@ -146,6 +146,7 @@ def run_integration(
 
     comparisons = compare_t_plus_one(
         selected_day,
+        config.asof.date(),
         factor,
         {
             "factor_baseline": baseline,
@@ -157,6 +158,7 @@ def run_integration(
     lineage = lineage_by_ticker(signals)
     blotter = simulate_t_plus_one_rebalance(
         selected_day,
+        config.asof.date(),
         baseline,
         fused_row,
         factor,
@@ -190,6 +192,10 @@ def run_integration(
             }
         )
 
+    paper_fill_date = blotter.get("fill_date")
+    paper_fill_after_asof = bool(
+        paper_fill_date and date.fromisoformat(paper_fill_date) > config.asof.date()
+    )
     gates = {
         "news_read_only_contract": True,
         "point_in_time_versions": all(item.asof <= config.asof for item in visible),
@@ -200,6 +206,7 @@ def run_integration(
         "pre_v4_overlay_turnover": sum(abs(value) for value in delta.values())
         <= config.overlay_turnover_cap + 1e-10,
         "t_plus_one_prices": all(item["status"] == "ok" for item in comparisons.values()),
+        "paper_fill_after_asof": paper_fill_after_asof,
         "paper_reconciliation": bool(blotter["reconciliation"]["closed_to_cent"]),
     }
     if run_factor_v4:
@@ -222,9 +229,10 @@ def run_integration(
     run_id = f"INT-{content_hash({'news': news.manifest, 'asof': config.asof.isoformat(), 'factor_paths': {key: str(value) for key, value in factor.paths.items()}, 'config': config_payload})[:16].upper()}"
     report: dict[str, Any] = {
         "run_id": run_id,
-        "release": "v0.2.0-integration",
+        "release": "v0.2.1-integration",
         "created_at": datetime.now().astimezone().isoformat(),
         "asof": config.asof.isoformat(),
+        "execution_anchor_date": config.asof.date().isoformat(),
         "factor_weight_date": selected_day.isoformat(),
         "status": "READY_FOR_PAPER_RESEARCH" if not hard_failures else "BLOCKED",
         "decision": decision,
@@ -372,16 +380,23 @@ def build_event_only_weights(
 
 def compare_t_plus_one(
     selected_day: date,
+    execution_anchor: date,
     factor: FactorInputs,
     portfolios: dict[str, dict[str, float]],
     cost_bps: float,
 ) -> dict[str, dict[str, Any]]:
     price_dates = factor.prices.dates
-    start_candidates = [day for day in price_dates if day <= selected_day]
-    end_candidates = [day for day in price_dates if day > selected_day]
+    start_candidates = [day for day in price_dates if day <= execution_anchor]
+    end_candidates = [day for day in price_dates if day > execution_anchor]
     if not start_candidates or not end_candidates:
         return {
-            name: {"status": "missing_t_plus_one_prices", "gross_return": None, "net_return": None}
+            name: {
+                "status": "missing_t_plus_one_prices",
+                "weight_date": selected_day.isoformat(),
+                "execution_anchor_date": execution_anchor.isoformat(),
+                "gross_return": None,
+                "net_return": None,
+            }
             for name in portfolios
         }
     start_day = start_candidates[-1]
@@ -413,6 +428,7 @@ def compare_t_plus_one(
         result[name] = {
             "status": "ok" if coverage >= 0.95 else "insufficient_price_coverage",
             "weight_date": selected_day.isoformat(),
+            "execution_anchor_date": execution_anchor.isoformat(),
             "return_start_date": start_day.isoformat(),
             "return_end_date": end_day.isoformat(),
             "price_notional_coverage": coverage,
@@ -426,6 +442,7 @@ def compare_t_plus_one(
 
 def simulate_t_plus_one_rebalance(
     selected_day: date,
+    execution_anchor: date,
     baseline: dict[str, float],
     target: dict[str, float],
     factor: FactorInputs,
@@ -434,10 +451,11 @@ def simulate_t_plus_one_rebalance(
     nav: float,
     cost_bps: float,
 ) -> dict[str, Any]:
-    next_dates = [day for day in factor.prices.dates if day > selected_day]
+    next_dates = [day for day in factor.prices.dates if day > execution_anchor]
     if not next_dates:
         return {
             "execution_model": "T+1_ADJ_CLOSE_PAPER",
+            "execution_anchor_date": execution_anchor.isoformat(),
             "orders": [],
             "reconciliation": {"closed_to_cent": False, "reason": "missing_t_plus_one_prices"},
         }
@@ -493,6 +511,7 @@ def simulate_t_plus_one_rebalance(
     identity_residual = cash_change + signed_notional + fees
     return {
         "execution_model": "T+1_ADJ_CLOSE_PAPER",
+        "execution_anchor_date": execution_anchor.isoformat(),
         "fill_date": fill_day.isoformat(),
         "orders": orders,
         "total_fees": fees,

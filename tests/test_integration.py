@@ -102,6 +102,8 @@ class IntegrationTests(unittest.TestCase):
                 {"factor_baseline", "event_only", "factor_plus_event_pre_v4"},
             )
             self.assertTrue(report["paper_oms"]["reconciliation"]["closed_to_cent"])
+            self.assertTrue(report["gates"]["paper_fill_after_asof"])
+            self.assertEqual(report["paper_oms"]["fill_date"], "2026-08-20")
             self.assertTrue((output / "fused_pre_v4_weights.csv").exists())
             orders = json.loads((output / "orders.json").read_text(encoding="utf-8"))
             fills = json.loads((output / "fills.json").read_text(encoding="utf-8"))
@@ -110,3 +112,54 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(fills[0]["order_id"], orders[0]["order_id"])
             self.assertTrue(fills[0]["fill_id"].startswith("INTFILL-"))
             self.assertTrue(any(item["event_refs"] for item in orders if item["ticker"] in {"NVDA", "TSM"}))
+
+    def test_stale_factor_data_cannot_fill_before_event_asof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "weights.csv").write_text(
+                "date,ticker,weight\n"
+                "2026-07-16,NVDA,0.4\n2026-07-16,TSM,0.3\n2026-07-16,SPY,0.3\n"
+                "2026-07-17,NVDA,0.4\n2026-07-17,TSM,0.3\n2026-07-17,SPY,0.3\n",
+                encoding="utf-8",
+            )
+            (root / "prices.csv").write_text(
+                "date,ticker,adj_close\n"
+                "2026-07-16,NVDA,100\n2026-07-16,TSM,50\n2026-07-16,SPY,500\n"
+                "2026-07-17,NVDA,102\n2026-07-17,TSM,51\n2026-07-17,SPY,501\n",
+                encoding="utf-8",
+            )
+            (root / "sectors.csv").write_text(
+                "symbol,sector\nNVDA,Technology\nTSM,Technology\nSPY,ETF\n",
+                encoding="utf-8",
+            )
+            output = root / "output"
+            with patch("evidence_alpha.integration.NewsAdapter") as adapter:
+                adapter.return_value.export.return_value = _news_export()
+                report = run_integration(
+                    news_base_url="http://news.test",
+                    factor_root=root,
+                    weights_path="weights.csv",
+                    sectors_path="sectors.csv",
+                    prices_path="prices.csv",
+                    output_dir=output,
+                    config=config_from_asof("2026-08-19T12:00:00Z"),
+                    allow_synthetic_news=True,
+                    write_parquet_staging=False,
+                )
+
+            self.assertEqual(report["status"], "BLOCKED")
+            self.assertEqual(report["factor_weight_date"], "2026-07-17")
+            self.assertEqual(report["execution_anchor_date"], "2026-08-19")
+            self.assertFalse(report["gates"]["t_plus_one_prices"])
+            self.assertFalse(report["gates"]["paper_fill_after_asof"])
+            self.assertIn("paper_fill_after_asof", report["hard_failures"])
+            self.assertEqual(report["counts"]["paper_orders"], 0)
+            self.assertEqual(report["counts"]["paper_fills"], 0)
+            self.assertEqual(
+                report["comparisons"]["factor_baseline"]["status"],
+                "missing_t_plus_one_prices",
+            )
+            self.assertEqual(
+                report["paper_oms"]["reconciliation"]["reason"],
+                "missing_t_plus_one_prices",
+            )
