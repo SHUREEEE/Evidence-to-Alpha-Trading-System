@@ -161,9 +161,15 @@ class IntegrationTests(unittest.TestCase):
                     prices_path="prices.csv",
                     output_dir=output,
                     config=config_from_asof("2026-08-19T12:00:00Z"),
+                    news_page_size=200,
                     allow_synthetic_news=True,
                     write_parquet_staging=False,
                 )
+            adapter.return_value.export.assert_called_once_with(
+                limit=100,
+                allow_synthetic=True,
+                page_size=200,
+            )
             self.assertEqual(report["status"], "READY_FOR_PAPER_RESEARCH")
             self.assertEqual(report["decision"], "INCONCLUSIVE")
             self.assertEqual(report["release"], "v0.5.0-integration")

@@ -151,6 +151,31 @@ class CurrentApi:
 
 
 class NewsAdapterTests(unittest.TestCase):
+    def test_current_no_cursor_api_can_request_200_in_one_page(self):
+        requested_limits = []
+
+        def get_json(url, timeout):
+            parsed = urlsplit(url)
+            requested_limits.extend(parse_qs(parsed.query).get("limit", []))
+            return {
+                "items": [{"id": f"E{index}"} for index in range(200)],
+                "next_cursor": None,
+            }
+
+        items = NewsAdapter(
+            "http://news.test", get_json=get_json
+        ).list_events(limit=200, page_size=200)
+
+        self.assertEqual(len(items), 200)
+        self.assertEqual(requested_limits, ["200"])
+
+    def test_page_size_outside_api_contract_fails_closed(self):
+        adapter = NewsAdapter("http://news.test", get_json=CurrentApi())
+        for page_size in (0, 201):
+            with self.subTest(page_size=page_size):
+                with self.assertRaisesRegex(ContractError, "page size"):
+                    adapter.list_events(limit=200, page_size=page_size)
+
     def test_synthetic_data_requires_explicit_opt_in(self):
         adapter = NewsAdapter("http://news.test", get_json=FixtureApi())
         with self.assertRaises(ContractError):

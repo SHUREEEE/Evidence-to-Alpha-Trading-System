@@ -29,11 +29,14 @@
    checks, including a three-way PB borrow-file hash cross-check. Added an
    exact-event-version PIT news-enrichment contract with external provenance,
    effective dates, availability timestamps, and fail-closed partial state.
-6. VERIFY CODE: 44/44 tests passed with warnings as errors. Coverage now
+6. VERIFY CODE: 53/53 tests passed with warnings as errors. Coverage now
    includes strict integer versions, duplicate/unknown event references,
    placeholder and local-source rejection, PIT dates, partial enrichment,
-   signal generation, event-scoped mapping, CSV round-trip, CLI wiring, and
-   enrichment-file tampering. Python compilation, 37-file JSON parsing, two
+   signal generation, event-scoped mapping, CSV round-trip, 200-item
+   no-cursor API paging, exact SQLite report versions, report cutoff
+   enforcement, pending-WAL rejection, read-only input invariants, CLI wiring,
+   and enrichment/input-file tampering. Python compilation, 121-file JSON
+   parsing, two
    JSON Schema validations, credential scanning, and Git whitespace checks
    passed before sealing.
 7. VERIFY DATA: News_Claws uses SQLite WAL mode, so a direct main-file copy was
@@ -41,8 +44,12 @@
    SHA-256 81D179EB... with integrity_check=ok and the same logical counts as
    the source: 254 non-demo events, 260 reports, zero company impacts, 48
    industry impacts, and zero report-level novelty fields. Of 254 events, 110
-   have at least one article published_at. The retained 100-event API export
-   belongs to the earlier F16FEB1F... snapshot and remains historical.
+   have at least one article published_at. An isolated API over the same
+   snapshot exported 200 current events and 206 evidence records. A read-only
+   SQLite run requested those 200 exact versions, enriched 56 publication
+   times, and retained 144 unresolved versions. All 200 remain degraded because
+   novelty or investable mapping is absent. The original snapshot hash was
+   unchanged and the isolated 8016 service was stopped.
 8. VERIFY READINESS: the policy returned exit code 1, decision BLOCKED, 20 hard
    failures, zero usable primary events, zero OOS events, and zero verified
    Paper sessions.
@@ -56,7 +63,8 @@
 ## Current decision
 
 - Readiness mechanism: PASS.
-- PIT news enrichment mechanism: PASS; production enrichment artifact absent.
+- PIT news enrichment mechanism: PASS; real publication-time artifact is
+  partial (56 enriched, 144 unresolved) and lacks novelty/ticker mappings.
 - News contract completeness: BLOCKED.
 - Statistical sample and OOS validation: BLOCKED.
 - T+1 PIT factor and corporate-action-safe prices: BLOCKED.

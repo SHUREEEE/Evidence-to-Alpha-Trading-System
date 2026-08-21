@@ -177,13 +177,32 @@ Run the fail-closed policy after producing one real integration:
 
 The latest read-only database snapshot contains 254 non-demo News_Claws events,
 260 reports, zero company impacts, and no top-level novelty field in any
-report. The previously sealed 100-event API export belongs to an earlier
-snapshot; it has no direct ticker mappings and lacks novelty for every event.
-The enrichment mechanism is implemented and covered by the 44-test suite, but
-no production enrichment artifact has been supplied. Available factor and
-price evidence ends on 2026-07-17, before the 2026-08-20 news observations. PB
-evidence and continuous Paper sessions are absent. The sealed readiness
-decision remains BLOCKED.
+report. A snapshot-matched, isolated API export now contains 200 events and 206
+evidence records. It has zero direct ticker mappings, 28 industry-only events,
+172 unmapped events, and missing novelty for all 200 events.
+
+The read-only SQLite enrichment command records the snapshot and input-event
+SHA-256 values, requires exact report versions, enforces report cutoffs, and
+rejects pending WAL data. The sealed partial run resolved real
+`published_at` for 56 of 200 event versions and explicitly retained 144
+unresolved versions. All 200 remain contract-degraded because novelty or
+investable company/ticker mapping is absent. The mechanism is covered by the
+53-test suite, including input tampering and read-only database invariants.
+Available factor and price evidence ends on 2026-07-17, before the 2026-08-20
+news observations. PB evidence and continuous Paper sessions are absent. The
+sealed readiness decision remains BLOCKED.
+
+Generate an auditable publication-time artifact from a checkpointed snapshot:
+
+    python -m evidence_alpha news-enrichment-sqlite
+      --database path/to/analysis.db
+      --events path/to/events.json
+      --commit NEWS_CLAWS_FULL_COMMIT
+      --allow-partial
+      --output path/to/news_enrichment.json
+
+Use `--page-size 200` for the maintained News_Claws API, which permits 200
+items but does not expose a cursor. The legacy-compatible default remains 100.
 
 See docs/09_real_data_readiness_v0.5.md and
 evidence/v0.5.0-preflight/real_data_inventory.json.

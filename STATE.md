@@ -2,8 +2,8 @@
 
 - Project: Evidence-to-Alpha Trading System
 - Release candidate: v0.5.0 real-data readiness preflight
-- Current phase: 06 Verify / 07 Seal - PIT news enrichment verified; production evidence still blocked
-- Task state: v0.5 readiness and PIT news-enrichment mechanisms complete; production enrichment, T+1 market data, PB, and continuous Paper gates blocked
+- Current phase: 07 Seal - real partial publication-time enrichment verified; release evidence still blocked
+- Task state: v0.5 readiness and SQLite PIT enrichment complete; novelty, ticker mapping, T+1 market data, PB, and continuous Paper gates blocked
 - Owner: Maker contract and verification implementation complete; independent production inputs and acceptance pending
 - Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, readiness attestations, PB/Paper cross-checks, standard audit, attribution artifacts, read-only API
 - Non-scope: news mutation, broker connectivity, live credentials, real-money execution, cloud account provisioning, economic-performance claims
@@ -21,6 +21,12 @@
 - Verified fact: zero of the 260 reports contains a top-level novelty field.
 - Verified fact: 110 of 254 events have at least one real article published_at; this can support partial publication-time enrichment but cannot clear missing novelty or investable mapping.
 - Verified fact: the retained 100-event export belongs to the earlier F16FEB1F... snapshot; it is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
+- Verified fact: an isolated service over the 81D179EB... snapshot exported the API maximum of 200 non-demo events and 206 evidence records; the service was stopped and the snapshot hash was unchanged.
+- Verified fact: the current 200-event export has zero direct ticker mappings, 28 industry-only events, 172 unmapped events, and missing novelty for every event.
+- Verified fact: the read-only SQLite exporter resolved real published_at for 56 exact event versions and recorded 144 unresolved versions under the explicit eligible_published_at_only policy.
+- Verified fact: the enrichment artifact SHA-256 is CC8827736796B322A6D9925693499F075E87027F9F385B30AADF1A9CB262584C and pipeline run is NEWS-SQLITE-C51F01179B111F4F43AB.
+- Verified fact: SQLite and input events hashes, sizes, and modification times are checked before and after extraction; a non-empty WAL, missing exact report, post-cutoff article, missing published_at, or changed input fails closed.
+- Verified fact: the maintained no-cursor API supports an explicit page size of 200 in both news-export and integrate; the legacy-compatible default remains 100.
 - Verified fact: v0.5 can apply a separately produced, exact-event-version PIT enrichment artifact without modifying News_Claws.
 - Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.
 - Verified fact: partial enrichment retains unresolved degradations and __UNMAPPED__; corrected observations move forward to enrichment availability time.
@@ -29,7 +35,7 @@
 - Verified fact: malformed readiness dates and numeric fields fail the input-contract gate instead of raising an unhandled exception.
 - Verified fact: the current readiness report is BLOCKED with zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
 - Decision: v0.5 is a preflight branch only. Do not merge, tag, or replace the v0.4 service until every readiness hard gate passes in one real-data run.
-- Verified fact: the v0.5 candidate passes 44 automated tests with all warnings promoted to errors.
+- Verified fact: the v0.5 candidate passes 53 automated tests with all warnings promoted to errors.
 - Verified fact: integrated run `INT-3294801BE2C27699` is `READY_FOR_PAPER_RESEARCH`, passes 13/13 integration hard gates, and has no standard-audit hard failures.
 - Verified fact: the multi-factor V4 production loader and all three external backtests pass in the same integrate run.
 - Verified fact: `event_study.csv` has eight NVDA/TSM rows across 1/3/5/20-day windows; the five-day primary window has no usable events.

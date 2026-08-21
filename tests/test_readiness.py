@@ -353,6 +353,26 @@ class ReadinessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             paths = _positive_bundle(root)
+            database_input = _write_json(
+                root / "production" / "news-claws.db.json",
+                {"snapshot": "immutable"},
+            )
+            events_input = _write_json(
+                root / "production" / "news-events.json",
+                [{"event_id": "E00", "event_version": 1}],
+            )
+            input_artifacts = [
+                {
+                    "artifact_type": "news_claws_sqlite_snapshot",
+                    "artifact": database_input.name,
+                    "sha256": _digest(database_input),
+                },
+                {
+                    "artifact_type": "news_export_events",
+                    "artifact": events_input.name,
+                    "sha256": _digest(events_input),
+                },
+            ]
             enrichment_payload = {
                 "schema_version": "1.0",
                 "enrichment_type": "news_event_enrichment",
@@ -363,6 +383,7 @@ class ReadinessTests(unittest.TestCase):
                     "commit": "a" * 40,
                     "pipeline_run_id": "NEWS-RUN-001",
                     "methodology": "PIT production novelty scoring",
+                    "input_artifacts": input_artifacts,
                 },
                 "events": [
                     {
@@ -394,6 +415,21 @@ class ReadinessTests(unittest.TestCase):
                 "source_commit": "a" * 40,
                 "pipeline_run_id": "NEWS-RUN-001",
                 "methodology": "PIT production novelty scoring",
+                "input_artifacts": [
+                    {
+                        **item,
+                        "artifact": str(
+                            (root / "production" / item["artifact"]).resolve()
+                        ),
+                    }
+                    for item in input_artifacts
+                ],
+                "selection": {
+                    "policy": "all_requested",
+                    "requested_event_refs": ["E00:v1"],
+                    "enriched_event_refs": ["E00:v1"],
+                    "unresolved_event_refs": [],
+                },
                 "generated_at": "2026-01-02T00:00:00+00:00",
                 "applied_event_refs": ["E00:v1"],
                 "unresolved_event_refs": [],
@@ -403,6 +439,23 @@ class ReadinessTests(unittest.TestCase):
             initial = _evaluate(paths)
             self.assertEqual(
                 initial["decision"], "READY_FOR_LIVE_AUTHORIZATION_REVIEW"
+            )
+
+            original_events_input = events_input.read_text(encoding="utf-8")
+            events_input.write_text(
+                f"{original_events_input} ",
+                encoding="utf-8",
+            )
+            input_tampered = _evaluate(paths)
+            self.assertEqual(input_tampered["decision"], "BLOCKED")
+            self.assertIn(
+                "news_enrichment_provenance",
+                input_tampered["hard_failures"],
+            )
+            events_input.write_text(original_events_input, encoding="utf-8")
+            self.assertEqual(
+                _evaluate(paths)["decision"],
+                "READY_FOR_LIVE_AUTHORIZATION_REVIEW",
             )
 
             enrichment.write_text(

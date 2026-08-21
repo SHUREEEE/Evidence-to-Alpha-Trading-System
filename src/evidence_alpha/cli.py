@@ -11,6 +11,7 @@ from .demo import run_demo
 from .integration import config_from_asof, run_integration
 from .news_adapter import NewsAdapter, write_news_export
 from .news_enrichment import apply_news_enrichment
+from .news_enrichment_exporter import export_sqlite_news_enrichment
 from .pipeline import config_from_cutoff, run_pipeline
 from .readiness import evaluate_release_readiness, write_readiness_report
 
@@ -51,12 +52,32 @@ def _parser() -> argparse.ArgumentParser:
         help="environment variable containing an optional read-only API token",
     )
     news_export.add_argument("--limit", type=int, default=100)
+    news_export.add_argument(
+        "--page-size",
+        type=int,
+        default=100,
+        help="event-list page size; current no-cursor News_Claws supports up to 200",
+    )
     news_export.add_argument("--allow-synthetic", action="store_true")
     news_export.add_argument(
         "--enrichment",
         help="versioned PIT enrichment JSON for published_at, novelty, and mappings",
     )
     news_export.add_argument("--output-dir", required=True)
+    news_sqlite = sub.add_parser(
+        "news-enrichment-sqlite",
+        help="create PIT published_at enrichment from a read-only News_Claws SQLite snapshot",
+    )
+    news_sqlite.add_argument("--database", required=True)
+    news_sqlite.add_argument("--events", required=True)
+    news_sqlite.add_argument("--repository", default="SHUREEEE/News_Claws")
+    news_sqlite.add_argument("--commit", required=True)
+    news_sqlite.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="explicitly retain unresolved refs that lack eligible published_at",
+    )
+    news_sqlite.add_argument("--output", required=True)
     integrate = sub.add_parser(
         "integrate",
         help="fuse News Claws event alpha into multi-factor weights before V4 controls",
@@ -73,6 +94,12 @@ def _parser() -> argparse.ArgumentParser:
     integrate.add_argument("--prices", help="override adjusted-close path, relative to factor root")
     integrate.add_argument("--asof", required=True, help="timezone-aware ISO-8601 timestamp")
     integrate.add_argument("--news-limit", type=int, default=100)
+    integrate.add_argument(
+        "--news-page-size",
+        type=int,
+        default=100,
+        help="event-list page size; use 200 for current no-cursor News_Claws",
+    )
     integrate.add_argument("--allow-synthetic-news", action="store_true")
     integrate.add_argument(
         "--news-enrichment",
@@ -157,7 +184,9 @@ def main(argv: list[str] | None = None) -> int:
         bundle = NewsAdapter(
             args.news_base_url, admin_token=os.getenv(args.news_token_env)
         ).export(
-            limit=args.limit, allow_synthetic=args.allow_synthetic
+            limit=args.limit,
+            allow_synthetic=args.allow_synthetic,
+            page_size=args.page_size,
         )
         if args.enrichment:
             bundle = apply_news_enrichment(bundle, args.enrichment)
@@ -175,6 +204,27 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0
+    if args.command == "news-enrichment-sqlite":
+        enrichment = export_sqlite_news_enrichment(
+            database_path=args.database,
+            events_path=args.events,
+            output_path=args.output,
+            repository=args.repository,
+            commit=args.commit,
+            allow_partial=args.allow_partial,
+        )
+        print(
+            json.dumps(
+                {
+                    "event_versions": len(enrichment.events),
+                    "pipeline_run_id": enrichment.pipeline_run_id,
+                    "output": str(enrichment.path),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
     if args.command == "integrate":
         report = run_integration(
             news_base_url=args.news_base_url,
@@ -186,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
             prices_path=args.prices,
             output_dir=args.output_dir,
             news_limit=args.news_limit,
+            news_page_size=args.news_page_size,
             allow_synthetic_news=args.allow_synthetic_news,
             write_parquet_staging=not args.skip_parquet_staging,
             run_factor_v4=args.run_factor_v4,

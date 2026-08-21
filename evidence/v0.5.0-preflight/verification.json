@@ -1,24 +1,28 @@
 {
   "schema_version": "1.0",
   "candidate": "v0.5.0-preflight",
-  "generated_at": "2026-08-21T14:54:20.2861866+08:00",
-  "baseline_commit": "a41daddbd28e7d6d030e04ebf74d4fa2678cd449",
+  "generated_at": "2026-08-21T16:09:27.8618021+08:00",
+  "baseline_commit": "cfe7073ad684e6f651a83d53e0a680a76dae6979",
   "branch": "codex/v0.5-real-readiness",
   "code_verification": {
-    "tests_passed": 44,
+    "tests_passed": 53,
     "tests_failed": 0,
     "warnings_as_errors": true,
     "compileall_passed": true,
     "git_diff_check_passed": true,
-    "json_files_parsed": 37,
+    "json_files_parsed": 121,
     "third_party_jsonschema_available": false,
     "powershell_schema_validation_passed": true,
-    "news_enrichment_contract_tests": 10
+    "news_enrichment_contract_tests": 17,
+    "news_api_page_size_tests": 2,
+    "readiness_input_artifact_tamper_test": true,
+    "sqlite_read_only_invariant_test": true,
+    "pending_wal_rejection_test": true
   },
   "artifacts": {
     "real_data_inventory": {
       "file": "real_data_inventory.json",
-      "sha256": "823c8388d811e91d6d553a17c7690b77d1920177a1b3aa60f9393ce0ce5b63b6",
+      "sha256": "1dac5e821c640381418a5e6702813ab45bcb1531297ec0287e8b3244c68bab92",
       "database_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77"
     },
     "readiness": {
@@ -32,9 +36,24 @@
       "out_of_sample_events": 0,
       "verified_paper_sessions": 0
     },
+    "news_enrichment_summary": {
+      "file": "news_enrichment_summary.json",
+      "sha256": "0973a41a762378d4488630759322a51d355cdaea0384a8863257ee7bf14faec1",
+      "decision": "PARTIAL_BLOCKED",
+      "event_versions_requested": 200,
+      "event_versions_enriched": 56,
+      "event_versions_unresolved": 144,
+      "event_versions_still_contract_degraded": 200,
+      "pipeline_run_id": "NEWS-SQLITE-C51F01179B111F4F43AB",
+      "runtime_artifact_sha256": "cc8827736796b322a6d9925693499f075e87027f9f385b30aadf1a9cb262584c"
+    },
+    "news_enrichment_schema": {
+      "file": "schemas/news_enrichment.schema.json",
+      "sha256": "db0ccd08184fbcbac8aa4154c98774e93c5200d314c74f3a18cff6fd1789e406"
+    },
     "development_document": {
       "file": "docs/09_real_data_readiness_v0.5.md",
-      "sha256": "d83e0e3da444d5cfb97015c8d61af62a8b20f55c4b74cdfe3529be1d55dfd41c"
+      "sha256": "1c6668833bbd2e3b684e6645ea5fda8c147826848218d08f420127a3707b0592"
     }
   },
   "runtime": {
@@ -43,7 +62,15 @@
     "health_status": "ok",
     "post_status": 405,
     "v0_5_replaced_v0_4": false,
-    "isolated_preview_8016_listening": false
+    "isolated_preview_8016_listening": false,
+    "snapshot_matched_export_completed": true,
+    "snapshot_sha256_unchanged_after_export": true
+  },
+  "readiness_rerun": {
+    "exit_code": 1,
+    "decision": "BLOCKED",
+    "hard_failure_count": 20,
+    "same_gate_results_as_sealed_report": true
   },
   "decision": "BLOCKED",
   "authorization": {

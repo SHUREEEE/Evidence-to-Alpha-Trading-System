@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 from datetime import datetime, timezone
+from hashlib import sha256
 import json
 from pathlib import Path
 import tempfile
@@ -110,6 +111,22 @@ def _payload() -> dict[str, object]:
 
 
 def _write_payload(root: Path, payload: dict[str, object]) -> Path:
+    database = root / "news-claws.db"
+    events = root / "events.json"
+    database.write_bytes(b"immutable sqlite snapshot fixture")
+    events.write_text("[]", encoding="utf-8")
+    payload["source"]["input_artifacts"] = [
+        {
+            "artifact_type": "news_claws_sqlite_snapshot",
+            "artifact": database.name,
+            "sha256": sha256(database.read_bytes()).hexdigest(),
+        },
+        {
+            "artifact_type": "news_export_events",
+            "artifact": events.name,
+            "sha256": sha256(events.read_bytes()).hexdigest(),
+        },
+    ]
     path = root / "news_enrichment.json"
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
@@ -269,6 +286,14 @@ class NewsEnrichmentTests(unittest.TestCase):
                     _bundle(), _write_payload(Path(directory), payload)
                 )
 
+    def test_changed_input_artifact_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            enrichment = _write_payload(root, _payload())
+            (root / "events.json").write_text("[{}]", encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "hash mismatch"):
+                apply_news_enrichment(_bundle(), enrichment)
+
     def test_pit_dates_fail_closed(self):
         payload = _payload()
         payload["events"][0]["mappings"][0]["effective_from"] = "2027-01-01"
@@ -353,6 +378,8 @@ class NewsEnrichmentTests(unittest.TestCase):
                         "2026-08-19T12:00:00Z",
                         "--news-enrichment",
                         str(enrichment),
+                        "--news-page-size",
+                        "200",
                         "--output-dir",
                         str(Path(directory) / "output"),
                     ]
@@ -362,6 +389,7 @@ class NewsEnrichmentTests(unittest.TestCase):
             self.assertEqual(
                 run.call_args.kwargs["news_enrichment_path"], str(enrichment)
             )
+            self.assertEqual(run.call_args.kwargs["news_page_size"], 200)
 
 
 if __name__ == "__main__":

@@ -63,6 +63,13 @@ class EventEnrichment:
 
 
 @dataclass(frozen=True)
+class EnrichmentInputArtifact:
+    artifact_type: str
+    path: Path
+    sha256: str
+
+
+@dataclass(frozen=True)
 class NewsEnrichment:
     path: Path
     sha256: str
@@ -71,6 +78,10 @@ class NewsEnrichment:
     commit: str
     pipeline_run_id: str
     methodology: str
+    input_artifacts: tuple[EnrichmentInputArtifact, ...]
+    selection_policy: str
+    requested_event_refs: tuple[str, ...]
+    unresolved_input_event_refs: tuple[str, ...]
     events: tuple[EventEnrichment, ...]
 
 
@@ -172,6 +183,64 @@ def _mapping_from_dict(value: object, event_ref: str) -> EnrichedMapping:
     )
 
 
+def _input_artifacts_from_source(
+    value: object, enrichment_path: Path
+) -> tuple[EnrichmentInputArtifact, ...]:
+    if not isinstance(value, list) or not value:
+        raise ContractError("news enrichment source requires input_artifacts")
+    artifacts: list[EnrichmentInputArtifact] = []
+    seen_types: set[str] = set()
+    for row in value:
+        if not isinstance(row, dict):
+            raise ContractError("news enrichment input artifact must be an object")
+        artifact_type = str(row.get("artifact_type", "")).strip()
+        artifact_value = str(row.get("artifact", "")).strip()
+        expected_hash = str(row.get("sha256", "")).strip().casefold()
+        if (
+            not re.fullmatch(r"[a-z][a-z0-9_]{2,63}", artifact_type)
+            or artifact_type in seen_types
+        ):
+            raise ContractError(
+                f"invalid or duplicate news enrichment input artifact type: "
+                f"{artifact_type!r}"
+            )
+        if not artifact_value or not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
+            raise ContractError(
+                f"news enrichment input artifact is incomplete: {artifact_type}"
+            )
+        artifact_path = Path(artifact_value)
+        if not artifact_path.is_absolute():
+            artifact_path = enrichment_path.parent / artifact_path
+        artifact_path = artifact_path.resolve()
+        if not artifact_path.is_file():
+            raise ContractError(
+                f"news enrichment input artifact not found: {artifact_path}"
+            )
+        actual_hash = _sha256_file(artifact_path)
+        if actual_hash != expected_hash:
+            raise ContractError(
+                f"news enrichment input artifact hash mismatch: {artifact_type}"
+            )
+        seen_types.add(artifact_type)
+        artifacts.append(
+            EnrichmentInputArtifact(
+                artifact_type=artifact_type,
+                path=artifact_path,
+                sha256=actual_hash,
+            )
+        )
+    required_types = {
+        "news_claws_sqlite_snapshot",
+        "news_export_events",
+    }
+    missing_types = sorted(required_types - seen_types)
+    if missing_types:
+        raise ContractError(
+            f"news enrichment input artifacts missing required types: {missing_types}"
+        )
+    return tuple(sorted(artifacts, key=lambda item: item.artifact_type))
+
+
 def load_news_enrichment(path: str | Path) -> NewsEnrichment:
     source_path = Path(path).resolve()
     if not source_path.is_file():
@@ -204,6 +273,12 @@ def load_news_enrichment(path: str | Path) -> NewsEnrichment:
         raise ContractError(
             "news enrichment requires production repository, commit, run, and methodology"
         )
+    input_artifacts = _input_artifacts_from_source(
+        source.get("input_artifacts"), source_path
+    )
+    selection = source.get("selection")
+    if selection is not None and not isinstance(selection, dict):
+        raise ContractError("news enrichment source selection must be an object")
 
     rows = payload.get("events")
     if not isinstance(rows, list) or not rows:
@@ -288,6 +363,50 @@ def load_news_enrichment(path: str | Path) -> NewsEnrichment:
             )
         )
 
+    event_refs = tuple(sorted(item.event_ref for item in events))
+    if selection is None:
+        selection_policy = "all_requested"
+        requested_event_refs = event_refs
+        unresolved_input_event_refs: tuple[str, ...] = ()
+    else:
+        selection_policy = str(selection.get("policy", "")).strip()
+        requested_value = selection.get("requested_event_refs")
+        enriched_value = selection.get("enriched_event_refs")
+        unresolved_value = selection.get("unresolved_event_refs")
+        if (
+            selection_policy
+            not in {"all_requested", "eligible_published_at_only"}
+            or not isinstance(requested_value, list)
+            or not isinstance(enriched_value, list)
+            or not isinstance(unresolved_value, list)
+            or not all(
+                isinstance(item, str) and item.strip()
+                for values in (requested_value, enriched_value, unresolved_value)
+                for item in values
+            )
+        ):
+            raise ContractError("news enrichment source selection is invalid")
+        requested_event_refs = tuple(sorted(requested_value))
+        enriched_event_refs = tuple(sorted(enriched_value))
+        unresolved_input_event_refs = tuple(sorted(unresolved_value))
+        if (
+            len(requested_event_refs) != len(set(requested_event_refs))
+            or len(enriched_event_refs) != len(set(enriched_event_refs))
+            or len(unresolved_input_event_refs)
+            != len(set(unresolved_input_event_refs))
+            or enriched_event_refs != event_refs
+            or set(enriched_event_refs) & set(unresolved_input_event_refs)
+            or set(requested_event_refs)
+            != set(enriched_event_refs) | set(unresolved_input_event_refs)
+            or (
+                selection_policy == "all_requested"
+                and unresolved_input_event_refs
+            )
+        ):
+            raise ContractError(
+                "news enrichment source selection does not match event coverage"
+            )
+
     return NewsEnrichment(
         path=source_path,
         sha256=_sha256_file(source_path),
@@ -296,6 +415,10 @@ def load_news_enrichment(path: str | Path) -> NewsEnrichment:
         commit=commit.casefold(),
         pipeline_run_id=pipeline_run_id,
         methodology=methodology,
+        input_artifacts=input_artifacts,
+        selection_policy=selection_policy,
+        requested_event_refs=requested_event_refs,
+        unresolved_input_event_refs=unresolved_input_event_refs,
         events=tuple(events),
     )
 
@@ -438,6 +561,22 @@ def apply_news_enrichment(
         "source_commit": enrichment.commit,
         "pipeline_run_id": enrichment.pipeline_run_id,
         "methodology": enrichment.methodology,
+        "input_artifacts": [
+            {
+                "artifact_type": item.artifact_type,
+                "artifact": str(item.path),
+                "sha256": item.sha256,
+            }
+            for item in enrichment.input_artifacts
+        ],
+        "selection": {
+            "policy": enrichment.selection_policy,
+            "requested_event_refs": list(enrichment.requested_event_refs),
+            "enriched_event_refs": sorted(entries),
+            "unresolved_event_refs": list(
+                enrichment.unresolved_input_event_refs
+            ),
+        },
         "generated_at": enrichment.generated_at.isoformat(),
         "applied_event_refs": sorted(entries),
         "unresolved_event_refs": unresolved_refs,

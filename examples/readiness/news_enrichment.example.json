@@ -7,7 +7,19 @@
     "repository": "SHUREEEE/News_Claws",
     "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "pipeline_run_id": "REPLACE-WITH-PRODUCTION-RUN-ID",
-    "methodology": "REPLACE-WITH-VERSIONED-PIT-METHODOLOGY"
+    "methodology": "REPLACE-WITH-VERSIONED-PIT-METHODOLOGY",
+    "input_artifacts": [
+      {
+        "artifact_type": "news_claws_sqlite_snapshot",
+        "artifact": "REPLACE-WITH-CHECKPOINTED-SQLITE-SNAPSHOT.db",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "artifact_type": "news_export_events",
+        "artifact": "REPLACE-WITH-NEWS-EXPORT-events.json",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
   },
   "events": [
     {

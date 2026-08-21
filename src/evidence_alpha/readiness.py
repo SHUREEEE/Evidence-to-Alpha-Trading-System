@@ -369,6 +369,41 @@ def evaluate_release_readiness(
                 if loaded_enrichment
                 else []
             )
+            expected_input_artifacts = (
+                [
+                    {
+                        "artifact_type": item.artifact_type,
+                        "artifact": str(item.path),
+                        "sha256": item.sha256,
+                    }
+                    for item in loaded_enrichment.input_artifacts
+                ]
+                if loaded_enrichment
+                else []
+            )
+            input_artifacts_match = bool(
+                loaded_enrichment
+                and enrichment_metadata.get("input_artifacts")
+                == expected_input_artifacts
+                and all(
+                    not _is_fixture_path(item.path)
+                    for item in loaded_enrichment.input_artifacts
+                )
+            )
+            expected_selection = (
+                {
+                    "policy": loaded_enrichment.selection_policy,
+                    "requested_event_refs": list(
+                        loaded_enrichment.requested_event_refs
+                    ),
+                    "enriched_event_refs": expected_refs,
+                    "unresolved_event_refs": list(
+                        loaded_enrichment.unresolved_input_event_refs
+                    ),
+                }
+                if loaded_enrichment
+                else None
+            )
             generated_matches = bool(
                 loaded_enrichment
                 and _datetime_is_aware(enrichment_metadata.get("generated_at"))
@@ -393,12 +428,15 @@ def evaluate_release_readiness(
                 == loaded_enrichment.pipeline_run_id
                 and enrichment_metadata.get("methodology")
                 == loaded_enrichment.methodology
+                and input_artifacts_match
+                and enrichment_metadata.get("selection") == expected_selection
                 and generated_matches
                 and enrichment_metadata.get("applied_event_refs") == expected_refs
                 and enrichment_metadata.get("unresolved_event_refs") == []
             )
             enrichment_detail = (
                 f"hash_ok={enrichment_hash_ok}, applied={len(expected_refs)}, "
+                f"inputs_ok={input_artifacts_match}, "
                 f"unresolved={enrichment_metadata.get('unresolved_event_refs')}"
             )
     gates.append(

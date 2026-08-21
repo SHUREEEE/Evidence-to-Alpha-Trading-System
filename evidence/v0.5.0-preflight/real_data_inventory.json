@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "inventory_id": "REAL-DATA-INVENTORY-20260821-V0.5",
-  "generated_at": "2026-08-21T14:52:55.0528642+08:00",
+  "generated_at": "2026-08-21T15:58:21.7770625+08:00",
   "decision": "BLOCKED",
   "database_snapshot": {
     "logical_path": "artifacts/news-real-preflight-v0.5/analysis-v3.db",
@@ -71,6 +71,65 @@
       "news_manifest.json": {
         "sha256": "afb14adc97c17d3348146b7227dc972b5ef4d6061ba7c9f086fda23777d6b036"
       }
+    },
+    "current_snapshot_export": {
+      "source_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+      "matches_current_database_snapshot": true,
+      "requested_limit": 200,
+      "requested_page_size": 200,
+      "api_cursor_available": false,
+      "event_versions": 200,
+      "evidence_records": 206,
+      "synthetic": false,
+      "events_with_direct_ticker_mapping": 0,
+      "events_with_industry_only_mapping": 28,
+      "events_without_investable_mapping": 172,
+      "events_with_zero_novelty": 200,
+      "events_with_contract_degradation": 200,
+      "events_with_real_published_at": 56,
+      "events_with_published_at_fallback": 144,
+      "observed_at_min": "2026-08-20T09:02:45.596090+00:00",
+      "observed_at_max": "2026-08-20T09:05:38.111390+00:00",
+      "degradations_after_enrichment": {
+        "published_at_fell_back_to_first_seen": 144,
+        "no_investable_company_or_industry_mapping": 172,
+        "novelty_not_exposed_by_api": 200
+      },
+      "files": {
+        "events.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/events.json",
+          "sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5"
+        },
+        "evidence.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/evidence.json",
+          "sha256": "eb2d9789ec5036a298b7871669d1282e30a513e67baca0938fe8d866c9e7d3a1"
+        },
+        "mappings.csv": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/mappings.csv",
+          "sha256": "70d92d429c091e3436c9ed145a0e499d8e2deffc271bc54679e37e679aaa85a3"
+        },
+        "news_manifest.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/news_manifest.json",
+          "sha256": "914f5fdcb740477694cbcb3d04fbb1afc074de2812a1a9b85030500b7ce6de19"
+        }
+      }
+    },
+    "publication_time_enrichment": {
+      "logical_path": "artifacts/news-real-preflight-v0.5/news_enrichment.sqlite.json",
+      "sha256": "cc8827736796b322a6d9925693499f075e87027f9f385b30aadf1a9cb262584c",
+      "generated_at": "2026-08-21T07:48:16.528723+00:00",
+      "source_repository": "SHUREEEE/News_Claws",
+      "source_commit": "357e2614264b533def7d3f9a09b196fa296697bb",
+      "pipeline_run_id": "NEWS-SQLITE-C51F01179B111F4F43AB",
+      "selection_policy": "eligible_published_at_only",
+      "requested_event_versions": 200,
+      "enriched_event_versions": 56,
+      "unresolved_event_versions": 144,
+      "database_input_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+      "events_input_sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5",
+      "applied_manifest_sha256": "0e68bd0577e61e3f1034b3e4825a97cf0653b0e6d4408c396b0cee098e248c89",
+      "event_timestamp_rows_changed": 0,
+      "all_event_versions_still_contract_degraded": true
     }
   },
   "factor_and_prices": {

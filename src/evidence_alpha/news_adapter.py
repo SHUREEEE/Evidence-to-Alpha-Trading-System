@@ -85,15 +85,22 @@ class NewsAdapter:
             return payload
         raise ContractError(f"news API response has no supported payload: {path}")
 
-    def list_events(self, limit: int = 100) -> list[dict[str, Any]]:
+    def list_events(
+        self, limit: int = 100, *, page_size: int = 100
+    ) -> list[dict[str, Any]]:
         if limit < 1:
             raise ContractError("news event limit must be positive")
+        if not 1 <= page_size <= 200:
+            raise ContractError("news event page size must be between 1 and 200")
         items: list[dict[str, Any]] = []
         cursor: str | None = None
         while len(items) < limit:
             page = self._get(
                 "/api/v1/events",
-                {"limit": min(100, limit - len(items)), "cursor": cursor},
+                {
+                    "limit": min(page_size, limit - len(items)),
+                    "cursor": cursor,
+                },
             )
             if not isinstance(page, dict) or not isinstance(page.get("items"), list):
                 raise ContractError("news event list must contain data.items")
@@ -103,8 +110,14 @@ class NewsAdapter:
                 break
         return items[:limit]
 
-    def export(self, *, limit: int = 100, allow_synthetic: bool = False) -> NewsExport:
-        summaries = self.list_events(limit)
+    def export(
+        self,
+        *,
+        limit: int = 100,
+        allow_synthetic: bool = False,
+        page_size: int = 100,
+    ) -> NewsExport:
+        summaries = self.list_events(limit, page_size=page_size)
         events: list[EventSnapshot] = []
         evidence: dict[str, EvidenceRecord] = {}
         mappings: dict[tuple[str, str], EntityMapping] = {}

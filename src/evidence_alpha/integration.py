@@ -96,6 +96,7 @@ def run_integration(
     news_admin_token: str | None = None,
     news_enrichment_path: str | Path | None = None,
     news_limit: int = 100,
+    news_page_size: int = 100,
     allow_synthetic_news: bool = False,
     write_parquet_staging: bool = True,
     run_factor_v4: bool = False,
@@ -106,7 +107,9 @@ def run_integration(
     output.mkdir(parents=True, exist_ok=True)
 
     news = NewsAdapter(news_base_url, admin_token=news_admin_token).export(
-        limit=news_limit, allow_synthetic=allow_synthetic_news
+        limit=news_limit,
+        allow_synthetic=allow_synthetic_news,
+        page_size=news_page_size,
     )
     if news_enrichment_path:
         news = apply_news_enrichment(news, news_enrichment_path)
