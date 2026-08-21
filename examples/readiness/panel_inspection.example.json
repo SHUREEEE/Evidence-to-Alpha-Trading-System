@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "market_input_panel_inspection",
+  "panel_kind": "factor_weights",
+  "artifact": {
+    "logical_path": "production/weights.parquet",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 1
+  },
+  "content": {
+    "coverage_start": "2026-08-20",
+    "coverage_end": "2026-08-21",
+    "row_count": 2,
+    "date_count": 2,
+    "ticker_count": 2,
+    "nonzero_value_count": 2,
+    "value_field": "weight"
+  },
+  "limitations": [
+    "production_provenance_not_attested",
+    "point_in_time_universe_not_attested"
+  ]
+}

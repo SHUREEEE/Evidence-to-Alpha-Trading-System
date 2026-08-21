@@ -153,16 +153,35 @@ The v0.4 synthetic integration has no integrity failures, but its five-day prima
 
 v0.5 adds compatibility with the maintained News_Claws API, an exact-version
 PIT news-enrichment contract, and a separate release-readiness command. It
-verifies actual file hashes and provenance rather than accepting a
-caller-provided real label. It requires:
+verifies actual file hashes, recomputes CSV/Parquet coverage and value-field
+semantics, and checks provenance rather than accepting a caller-provided real
+label. It requires:
 
 - non-synthetic external news provenance with no unresolved novelty,
   publication-time, or investable-mapping degradation;
 - 30 usable primary-window events, 10 OOS events, and at least three rolling folds;
 - passing baseline, placebo, one-day-delay, and doubled-cost gates;
 - PIT factor weights and corporate-action-safe prices through event T+1;
-- a real PB borrow feed, passing dry run, and passing launch bundle;
+- a real PB borrow feed with a verified real-source ingestion manifest and one
+  canonical SHA-256 shared by ingestion, validation, dry run, and launch bundle;
 - 20 gap-free hashed Paper sessions with freshness and reconciliation.
+
+Inspect candidate market files before authoring attestations:
+
+    python -m evidence_alpha inspect-panel
+      --input path/to/weights.parquet
+      --kind factor_weights
+      --logical-path production/weights.parquet
+      --output artifacts/input-inspection/weights.json
+
+    python -m evidence_alpha inspect-panel
+      --input path/to/prices.parquet
+      --kind adjusted_prices
+      --logical-path production/prices.parquet
+      --output artifacts/input-inspection/prices.json
+
+The reports contain content-derived hashes, coverage, counts, and value fields.
+They never assert production provenance, PIT universe, corporate actions, or delistings.
 
 Run the fail-closed policy after producing one real integration:
 
@@ -170,6 +189,7 @@ Run the fail-closed policy after producing one real integration:
       --artifact-dir artifacts/integrated-real
       --factor-attestation path/to/factor_attestation.json
       --price-attestation path/to/price_attestation.json
+      --pb-ingestion-manifest path/to/pb_ingestion_manifest.json
       --pb-validation path/to/pb_validation.json
       --pb-dry-run-manifest path/to/pb_dry_run_manifest.json
       --pb-launch-bundle path/to/pb_launch_bundle.json
@@ -187,10 +207,39 @@ rejects pending WAL data. The sealed partial run resolved real
 `published_at` for 56 of 200 event versions and explicitly retained 144
 unresolved versions. All 200 remain contract-degraded because novelty or
 investable company/ticker mapping is absent. The mechanism is covered by the
-53-test suite, including input tampering and read-only database invariants.
-Available factor and price evidence ends on 2026-07-17, before the 2026-08-20
-news observations. PB evidence and continuous Paper sessions are absent. The
-sealed readiness decision remains BLOCKED.
+70-test suite, including false coverage declarations, raw-close substitution,
+input tampering, and read-only database invariants.
+
+A separate historical-overlap audit now inspects every non-demo report in the
+checkpointed snapshot, including the 54 events hidden by the API's 200-item
+no-cursor limit. It uses the conservative point-in-time rule
+`observed_at=max(published_at-or-first_seen, first_seen, last_seen,
+report.generated_at, report.data_cutoff_at)` and never emits event IDs, titles,
+bodies, URLs, or absolute paths. Against factor coverage starting 2022-09-26
+and explicit `adj_close` coverage ending 2024-12-31, it found zero causally
+observed events. Six report versions have publication dates inside the market
+window, but all six were only observed in 2026 and are rejected as look-ahead.
+With a 30% chronological OOS split, the 30-event and 10-OOS gates require at
+least 31 total usable events.
+
+Run the same fail-closed audit on a checkpointed snapshot:
+
+    python -m evidence_alpha audit-news-overlap
+      --database path/to/analysis.db
+      --factor-coverage-start 2022-09-26
+      --adjusted-price-coverage-end 2024-12-31
+      --minimum-event-count 30
+      --oos-fraction 0.30
+      --minimum-oos-events 10
+      --output path/to/historical_news_overlap_audit.json
+
+The audited V6.5 weight panel contains 2,114,370 rows across 2,214 tickers and
+ends on 2026-07-17. The newer TDX feed also ends on 2026-07-17 but is raw close;
+the only inspected panel with an explicit `adj_close` field ends on 2024-12-31.
+All 200 current real events are later than those inputs. PB evidence and
+continuous Paper sessions are absent. The sealed readiness report has 23 hard
+failures, including the missing PB ingestion provenance gate, and remains
+BLOCKED.
 
 Generate an auditable publication-time artifact from a checkpointed snapshot:
 
@@ -205,7 +254,11 @@ Use `--page-size 200` for the maintained News_Claws API, which permits 200
 items but does not expose a cursor. The legacy-compatible default remains 100.
 
 See docs/09_real_data_readiness_v0.5.md and
-evidence/v0.5.0-preflight/real_data_inventory.json.
+evidence/v0.5.0-preflight/real_data_inventory.json. The direct market-input
+audit is retained in evidence/v0.5.0-preflight/market_input_audit.json, and the
+sanitized historical overlap result is retained in
+evidence/v0.5.0-preflight/historical_news_overlap_audit.json under
+schemas/historical_news_overlap_audit.schema.json.
 
 ## Inputs
 

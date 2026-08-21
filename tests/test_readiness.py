@@ -7,8 +7,10 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from evidence_alpha.artifact_inspection import inspect_input_panel
 from evidence_alpha.cli import main as cli_main
 from evidence_alpha.independent_validation import REQUIRED_SCENARIOS
+from evidence_alpha.models import ContractError
 from evidence_alpha.readiness import (
     REQUIRED_RESEARCH_GATES,
     evaluate_release_readiness,
@@ -42,13 +44,27 @@ def _positive_bundle(root: Path) -> dict[str, Path]:
     weights = production / "weights.csv"
     prices = production / "prices.csv"
     borrow = production / "borrow.csv"
-    weights.write_text("date,ticker,weight\n2026-03-01,NVDA,0.1\n", encoding="utf-8")
+    pb_source = production / "vendor_borrow.csv"
+    pb_mapping = production / "pb_mapping.yaml"
+    weights.write_text(
+        "date,ticker,weight\n2026-01-01,NVDA,0.1\n2026-03-02,NVDA,0.1\n",
+        encoding="utf-8",
+    )
     prices.write_text(
-        "date,ticker,adj_close\n2026-03-01,NVDA,100\n2026-03-02,NVDA,101\n",
+        "date,ticker,adj_close\n2026-01-01,NVDA,99\n"
+        "2026-03-01,NVDA,100\n2026-03-02,NVDA,101\n",
         encoding="utf-8",
     )
     borrow.write_text(
         "date,symbol,locate_available_shares\n2026-03-01,NVDA,1000\n",
+        encoding="utf-8",
+    )
+    pb_source.write_text(
+        "date,symbol,available\n2026-03-01,NVDA,1000\n",
+        encoding="utf-8",
+    )
+    pb_mapping.write_text(
+        "columns:\n  date: date\n  symbol: symbol\n",
         encoding="utf-8",
     )
 
@@ -147,7 +163,7 @@ def _positive_bundle(root: Path) -> dict[str, Path]:
             "attestation_type": "factor_weights",
             "artifact": {
                 "sha256": _digest(weights),
-                "coverage_start": "2025-12-01",
+                "coverage_start": "2026-01-01",
                 "coverage_end": "2026-03-02",
             },
             "production": {
@@ -171,7 +187,7 @@ def _positive_bundle(root: Path) -> dict[str, Path]:
             "attestation_type": "corporate_action_safe_prices",
             "artifact": {
                 "sha256": _digest(prices),
-                "coverage_start": "2025-12-01",
+                "coverage_start": "2026-01-01",
                 "coverage_end": "2026-03-02",
             },
             "production": {
@@ -190,6 +206,26 @@ def _positive_bundle(root: Path) -> dict[str, Path]:
                 "delistings_represented": True,
                 "unresolved_exceptions": [],
             },
+        },
+    )
+    pb_ingestion = _write_json(
+        root / "pb_ingestion.json",
+        {
+            "workflow": "pb_borrow_feed_ingestion",
+            "status": "CANONICALIZED",
+            "source_name": "Institutional Prime Broker",
+            "source_file": str(pb_source),
+            "source_file_sha256": _digest(pb_source),
+            "mapping_file": str(pb_mapping),
+            "mapping_file_sha256": _digest(pb_mapping),
+            "canonical_file": str(borrow),
+            "canonical_file_sha256": _digest(borrow),
+            "received_at_utc": "2026-03-01T20:05:00+00:00",
+            "real_source_attested": True,
+            "rows": 1,
+            "symbols_count": 1,
+            "date_min": "2026-03-01",
+            "date_max": "2026-03-01",
         },
     )
     pb_validation = _write_json(
@@ -280,9 +316,12 @@ def _positive_bundle(root: Path) -> dict[str, Path]:
         "artifacts": artifacts,
         "factor": factor_attestation,
         "price": price_attestation,
+        "pb_ingestion": pb_ingestion,
         "pb_validation": pb_validation,
         "pb_dry_run": pb_dry_run,
         "pb_bundle": pb_bundle,
+        "pb_source": pb_source,
+        "pb_mapping": pb_mapping,
         "paper": paper_manifest,
         "borrow": borrow,
         "first_paper_session": Path(session_rows[0]["artifact"]),
@@ -294,6 +333,7 @@ def _evaluate(paths: dict[str, Path]):
         artifact_dir=paths["artifacts"],
         factor_attestation_path=paths["factor"],
         price_attestation_path=paths["price"],
+        pb_ingestion_manifest_path=paths["pb_ingestion"],
         pb_validation_path=paths["pb_validation"],
         pb_dry_run_manifest_path=paths["pb_dry_run"],
         pb_launch_bundle_path=paths["pb_bundle"],
@@ -313,6 +353,110 @@ class ReadinessTests(unittest.TestCase):
             self.assertFalse(report["hard_failures"])
             self.assertEqual(report["authorization"]["live_trading"], "NOT_GRANTED")
             self.assertEqual(report["counts"]["paper_sessions"], 20)
+
+    def test_declared_factor_coverage_cannot_exceed_file_contents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = _positive_bundle(Path(directory))
+            attestation = json.loads(paths["factor"].read_text(encoding="utf-8"))
+            attestation["artifact"]["coverage_start"] = "2025-12-01"
+            paths["factor"].write_text(
+                json.dumps(attestation, indent=2), encoding="utf-8"
+            )
+
+            report = _evaluate(paths)
+
+            self.assertEqual(report["decision"], "BLOCKED")
+            self.assertIn("factor_artifact_contents", report["hard_failures"])
+            self.assertIn(
+                "factor_coverage_through_t_plus_one", report["hard_failures"]
+            )
+            gate = next(
+                item
+                for item in report["gates"]
+                if item["name"] == "factor_artifact_contents"
+            )
+            self.assertIn("actual=2026-01-01..2026-03-02", gate["detail"])
+
+    def test_raw_close_cannot_pass_as_attested_adjusted_close(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = _positive_bundle(Path(directory))
+            prices = Path(directory) / "production" / "prices.csv"
+            prices.write_text(
+                "date,ticker,close\n2026-01-01,NVDA,99\n"
+                "2026-03-01,NVDA,100\n2026-03-02,NVDA,101\n",
+                encoding="utf-8",
+            )
+            attestation = json.loads(paths["price"].read_text(encoding="utf-8"))
+            attestation["artifact"]["sha256"] = _digest(prices)
+            paths["price"].write_text(
+                json.dumps(attestation, indent=2), encoding="utf-8"
+            )
+
+            report = _evaluate(paths)
+
+            self.assertEqual(report["decision"], "BLOCKED")
+            self.assertNotIn("price_artifact_hash", report["hard_failures"])
+            self.assertIn("price_artifact_contents", report["hard_failures"])
+            self.assertIn("input_contract_valid", report["hard_failures"])
+            self.assertTrue(
+                any("must contain adj_close" in item for item in report["input_errors"])
+            )
+
+    def test_total_return_index_can_match_price_attestation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = _positive_bundle(Path(directory))
+            prices = Path(directory) / "production" / "prices.csv"
+            prices.write_text(
+                "date,ticker,total_return_index\n2026-01-01,NVDA,99\n"
+                "2026-03-01,NVDA,100\n2026-03-02,NVDA,101\n",
+                encoding="utf-8",
+            )
+            attestation = json.loads(paths["price"].read_text(encoding="utf-8"))
+            attestation["artifact"]["sha256"] = _digest(prices)
+            attestation["adjustments"]["price_field"] = "total_return_index"
+            paths["price"].write_text(
+                json.dumps(attestation, indent=2), encoding="utf-8"
+            )
+
+            report = _evaluate(paths)
+
+            self.assertEqual(
+                report["decision"], "READY_FOR_LIVE_AUTHORIZATION_REVIEW"
+            )
+            gate = next(
+                item
+                for item in report["gates"]
+                if item["name"] == "price_artifact_contents"
+            )
+            self.assertTrue(gate["passed"])
+            self.assertIn("field=total_return_index", gate["detail"])
+
+    def test_wide_csv_weight_inspection_skips_nan_cells(self):
+        with tempfile.TemporaryDirectory() as directory:
+            weights = Path(directory) / "weights.csv"
+            weights.write_text(
+                "date,NVDA,TSM\n"
+                "2025-12-31,nan,nan\n"
+                "2026-01-01,0.1,nan\n"
+                "2026-01-02,0.2,-0.1\n",
+                encoding="utf-8",
+            )
+
+            inspection = inspect_input_panel(weights, "factor_weights")
+
+            self.assertEqual(inspection.coverage_start, date(2026, 1, 1))
+            self.assertEqual(inspection.row_count, 3)
+            self.assertEqual(inspection.date_count, 2)
+            self.assertEqual(inspection.ticker_count, 2)
+            self.assertEqual(inspection.nonzero_value_count, 3)
+
+            duplicate = Path(directory) / "duplicate.csv"
+            duplicate.write_text(
+                "date,NVDA\n2026-01-01,0.1\n2026-01-01,0.2\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ContractError, "duplicate wide"):
+                inspect_input_panel(duplicate, "factor_weights")
 
     def test_real_label_alone_cannot_clear_provenance_gates(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -348,6 +492,36 @@ class ReadinessTests(unittest.TestCase):
 
             self.assertEqual(report["decision"], "BLOCKED")
             self.assertIn("pb_real_feed_crosscheck", report["hard_failures"])
+
+    def test_pb_ingestion_requires_real_source_and_verified_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = _positive_bundle(Path(directory))
+            ingestion = json.loads(
+                paths["pb_ingestion"].read_text(encoding="utf-8")
+            )
+            ingestion["real_source_attested"] = False
+            paths["pb_ingestion"].write_text(
+                json.dumps(ingestion, indent=2),
+                encoding="utf-8",
+            )
+
+            report = _evaluate(paths)
+
+            self.assertEqual(report["decision"], "BLOCKED")
+            self.assertIn("pb_ingestion_provenance", report["hard_failures"])
+            self.assertNotIn("pb_real_feed_crosscheck", report["hard_failures"])
+
+            ingestion["real_source_attested"] = True
+            paths["pb_ingestion"].write_text(
+                json.dumps(ingestion, indent=2),
+                encoding="utf-8",
+            )
+            paths["pb_source"].write_text("tampered\n", encoding="utf-8")
+
+            report = _evaluate(paths)
+
+            self.assertIn("pb_ingestion_provenance", report["hard_failures"])
+            self.assertNotIn("pb_real_feed_crosscheck", report["hard_failures"])
 
     def test_changed_news_enrichment_breaks_provenance_gate(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -507,6 +681,8 @@ class ReadinessTests(unittest.TestCase):
                     str(paths["factor"]),
                     "--price-attestation",
                     str(paths["price"]),
+                    "--pb-ingestion-manifest",
+                    str(paths["pb_ingestion"]),
                     "--pb-validation",
                     str(paths["pb_validation"]),
                     "--pb-dry-run-manifest",

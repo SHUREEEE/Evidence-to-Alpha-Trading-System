@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/evidence-alpha/panel_inspection.schema.json",
+  "title": "Market input panel inspection",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "panel_kind",
+    "artifact",
+    "content",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "artifact_type": {
+      "const": "market_input_panel_inspection"
+    },
+    "panel_kind": {
+      "enum": [
+        "factor_weights",
+        "adjusted_prices"
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "logical_path",
+        "sha256",
+        "size_bytes"
+      ],
+      "properties": {
+        "logical_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "content": {
+      "type": "object",
+      "required": [
+        "coverage_start",
+        "coverage_end",
+        "row_count",
+        "date_count",
+        "ticker_count",
+        "nonzero_value_count",
+        "value_field"
+      ],
+      "properties": {
+        "coverage_start": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_end": {
+          "type": "string",
+          "format": "date"
+        },
+        "row_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "date_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ticker_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "nonzero_value_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value_field": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "production_provenance_not_attested",
+          "point_in_time_universe_not_attested",
+          "corporate_actions_not_attested",
+          "delistings_not_attested"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

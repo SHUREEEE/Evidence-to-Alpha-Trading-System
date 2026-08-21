@@ -1,0 +1,17 @@
+{
+  "workflow": "pb_borrow_feed_ingestion",
+  "status": "CANONICALIZED",
+  "source_name": "Institutional Prime Broker",
+  "source_file": "vendor/pb_borrow_2026-03-01.csv",
+  "source_file_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "mapping_file": "config/pb_mapping.yaml",
+  "mapping_file_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "canonical_file": "production/pb_borrow_2026-03-01.parquet",
+  "canonical_file_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "received_at_utc": "2026-03-01T20:05:00+00:00",
+  "real_source_attested": true,
+  "rows": 1,
+  "symbols_count": 1,
+  "date_min": "2026-03-01",
+  "date_max": "2026-03-01"
+}

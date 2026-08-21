@@ -16,6 +16,7 @@ The CLI consumes each file separately:
       --artifact-dir artifacts/integrated-real
       --factor-attestation examples/readiness/factor_attestation.example.json
       --price-attestation examples/readiness/price_attestation.example.json
+      --pb-ingestion-manifest examples/readiness/pb_ingestion_manifest.example.json
       --pb-validation examples/readiness/pb_validation.example.json
       --pb-dry-run-manifest examples/readiness/pb_dry_run_manifest.example.json
       --pb-launch-bundle examples/readiness/pb_launch_bundle.example.json

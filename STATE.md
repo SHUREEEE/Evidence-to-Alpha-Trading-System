@@ -2,8 +2,8 @@
 
 - Project: Evidence-to-Alpha Trading System
 - Release candidate: v0.5.0 real-data readiness preflight
-- Current phase: 07 Seal - real partial publication-time enrichment verified; release evidence still blocked
-- Task state: v0.5 readiness and SQLite PIT enrichment complete; novelty, ticker mapping, T+1 market data, PB, and continuous Paper gates blocked
+- Current phase: 07 Seal - market-input and historical causal-overlap audits plus partial publication-time enrichment verified; release evidence still blocked
+- Task state: v0.5 proves the current historical cohort has zero causally valid market overlap; novelty, ticker mapping, fresh PIT weights, corporate-action-safe T+1 prices, PB, and continuous Paper gates remain blocked
 - Owner: Maker contract and verification implementation complete; independent production inputs and acceptance pending
 - Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, readiness attestations, PB/Paper cross-checks, standard audit, attribution artifacts, read-only API
 - Non-scope: news mutation, broker connectivity, live credentials, real-money execution, cloud account provisioning, economic-performance claims
@@ -23,6 +23,11 @@
 - Verified fact: the retained 100-event export belongs to the earlier F16FEB1F... snapshot; it is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
 - Verified fact: an isolated service over the 81D179EB... snapshot exported the API maximum of 200 non-demo events and 206 evidence records; the service was stopped and the snapshot hash was unchanged.
 - Verified fact: the current 200-event export has zero direct ticker mappings, 28 industry-only events, 172 unmapped events, and missing novelty for every event.
+- Verified fact: those 200 real events were published from 2026-08-06 through 2026-08-20; all 200 are later than the available V6.5 weight and TDX price cutoff.
+- Verified fact: the read-only historical overlap CLI audited all 254 non-demo events and 260 report versions using SQLite `mode=ro`, `query_only`, `quick_check`, pending-WAL rejection, and before/after snapshot fingerprints.
+- Verified fact: all 260 conservative observation timestamps fall in 2026. Six report versions have publication dates inside the 2022-09-26 to 2024-12-30 market window, but all six were observed too late; the causally valid overlap is zero events and zero versions.
+- Verified fact: the historical overlap artifact contains only the snapshot hash, logical name, aggregate dates/counts, thresholds, and gates; it contains no event IDs, titles, bodies, URLs, or absolute paths.
+- Verified fact: with minimum_event_count=30, oos_fraction=0.30, and minimum_oos_events=10, the smallest cohort satisfying both exact gates is 31 events.
 - Verified fact: the read-only SQLite exporter resolved real published_at for 56 exact event versions and recorded 144 unresolved versions under the explicit eligible_published_at_only policy.
 - Verified fact: the enrichment artifact SHA-256 is CC8827736796B322A6D9925693499F075E87027F9F385B30AADF1A9CB262584C and pipeline run is NEWS-SQLITE-C51F01179B111F4F43AB.
 - Verified fact: SQLite and input events hashes, sizes, and modification times are checked before and after extraction; a non-empty WAL, missing exact report, post-cutoff article, missing published_at, or changed input fails closed.
@@ -31,11 +36,18 @@
 - Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.
 - Verified fact: partial enrichment retains unresolved degradations and __UNMAPPED__; corrected observations move forward to enrichment availability time.
 - Verified fact: a caller-provided real label is downgraded when news mappings are placeholders or the API contract is degraded.
-- Verified fact: readiness verifies hashes and provenance for factor, price, PB, and every Paper session artifact.
+- Verified fact: readiness now reloads CSV/Parquet factor and price artifacts, derives actual coverage, rejects duplicate or invalid values, and requires declared coverage to exactly match file contents.
+- Verified fact: `inspect-panel` double-fingerprints candidate files, emits only relative logical paths and content facts, refuses input overwrite, and retains explicit unverified provenance/PIT/corporate-action limitations.
+- Verified fact: the local V6.5 panel contains 2,114,370 non-zero weights across 2,214 tickers from 2022-09-26 through 2026-07-17.
+- Verified fact: the inspected explicit adj_close panel contains 1,371,595 rows across 516 tickers from 2014-01-02 through 2024-12-31.
+- Verified fact: local TDX SPY, NVDA, and TSM records end on 2026-07-17 and expose raw close; the V6.5 manifest explicitly says dividends and smaller corporate actions remain unadjusted.
+- Verified fact: the V6.5 manifest is tracked at b3230157f36e8f09d08b0f09a2180f2a88cb1ddb, while the audited weight and price binaries are not Git-tracked and have no immutable production-run binding.
+- Verified fact: GitHub has no multi-factor Release, the latest research Actions run has zero artifacts, and the secondary private research repository has zero branches.
+- Verified fact: readiness verifies hashes and provenance for factor, price, PB, and every Paper session artifact; PB additionally requires verified source, mapping, and canonical-file hashes plus four-way canonical hash agreement across ingestion, validation, dry run, and launch bundle.
 - Verified fact: malformed readiness dates and numeric fields fail the input-contract gate instead of raising an unhandled exception.
-- Verified fact: the current readiness report is BLOCKED with zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
+- Verified fact: the current readiness report is BLOCKED with 23 hard failures, zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
 - Decision: v0.5 is a preflight branch only. Do not merge, tag, or replace the v0.4 service until every readiness hard gate passes in one real-data run.
-- Verified fact: the v0.5 candidate passes 53 automated tests with all warnings promoted to errors.
+- Verified fact: the v0.5 candidate passes 70 automated tests and 8 subtests with all warnings promoted to errors.
 - Verified fact: integrated run `INT-3294801BE2C27699` is `READY_FOR_PAPER_RESEARCH`, passes 13/13 integration hard gates, and has no standard-audit hard failures.
 - Verified fact: the multi-factor V4 production loader and all three external backtests pass in the same integrate run.
 - Verified fact: `event_study.csv` has eight NVDA/TSM rows across 1/3/5/20-day windows; the five-day primary window has no usable events.

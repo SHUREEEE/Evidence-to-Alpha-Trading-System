@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/pb_ingestion_manifest.schema.json",
+  "title": "PB Borrow Feed Ingestion Manifest",
+  "type": "object",
+  "required": [
+    "workflow",
+    "status",
+    "source_name",
+    "source_file",
+    "source_file_sha256",
+    "mapping_file",
+    "mapping_file_sha256",
+    "canonical_file",
+    "canonical_file_sha256",
+    "received_at_utc",
+    "real_source_attested",
+    "rows",
+    "symbols_count",
+    "date_min",
+    "date_max"
+  ],
+  "properties": {
+    "workflow": {
+      "const": "pb_borrow_feed_ingestion"
+    },
+    "status": {
+      "const": "CANONICALIZED"
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_file_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "mapping_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mapping_file_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "canonical_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_file_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "received_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "real_source_attested": {
+      "const": true
+    },
+    "rows": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "symbols_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "date_min": {
+      "type": "string",
+      "format": "date"
+    },
+    "date_max": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "additionalProperties": true
+}

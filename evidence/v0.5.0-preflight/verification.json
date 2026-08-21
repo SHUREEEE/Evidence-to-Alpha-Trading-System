@@ -1,21 +1,47 @@
 {
   "schema_version": "1.0",
   "candidate": "v0.5.0-preflight",
-  "generated_at": "2026-08-21T16:09:27.8618021+08:00",
-  "baseline_commit": "cfe7073ad684e6f651a83d53e0a680a76dae6979",
+  "generated_at": "2026-08-21T23:49:54.2755331+08:00",
+  "baseline_commit": "3d4db0a0a38ecb22e89939a9ec19b347a867f429",
   "branch": "codex/v0.5-real-readiness",
   "code_verification": {
-    "tests_passed": 53,
+    "tests_passed": 70,
+    "subtests_passed": 8,
     "tests_failed": 0,
     "warnings_as_errors": true,
     "compileall_passed": true,
     "git_diff_check_passed": true,
-    "json_files_parsed": 121,
+    "json_files_parsed": 128,
     "third_party_jsonschema_available": false,
     "powershell_schema_validation_passed": true,
+    "schema_instances_validated": 12,
     "news_enrichment_contract_tests": 17,
     "news_api_page_size_tests": 2,
     "readiness_input_artifact_tamper_test": true,
+    "readiness_content_coverage_test": true,
+    "raw_close_substitution_rejection_test": true,
+    "total_return_index_match_test": true,
+    "wide_csv_missing_cell_test": true,
+    "wide_csv_empty_boundary_date_test": true,
+    "wide_csv_duplicate_date_rejection_test": true,
+    "real_parquet_content_audits": 2,
+    "panel_inspection_cli_tests": 5,
+    "panel_inspection_schema_validation": true,
+    "panel_inspection_real_parquet_reproductions": 2,
+    "historical_news_overlap_tests": 7,
+    "historical_news_overlap_schema_validation": true,
+    "historical_news_overlap_cli_machine_output_test": true,
+    "historical_news_overlap_raw_news_leak_hits": 0,
+    "pb_ingestion_provenance_test": true,
+    "pb_ingestion_source_tamper_test": true,
+    "pb_ingestion_schema_validation": true,
+    "internal_hashes_consistent": 10,
+    "external_hashes_consistent": 6,
+    "credential_scan_hits": 0,
+    "personal_absolute_path_hits": 0,
+    "development_docx_visual_qa_passed": true,
+    "development_docx_pages_inspected": 6,
+    "libreoffice_renderer_available": false,
     "sqlite_read_only_invariant_test": true,
     "pending_wal_rejection_test": true
   },
@@ -27,11 +53,12 @@
     },
     "readiness": {
       "file": "readiness.json",
-      "sha256": "d45e24c5d01eef7af6095d6636a2e028494953b77e7798ca0ef728f1ffd7e963",
+      "sha256": "56ad9277a04d9763581750609dd74bb4b01c78cd6f816cef6540432a7df0f7aa",
       "policy": "evidence-alpha-real-readiness-v0.5",
       "decision": "BLOCKED",
-      "hard_failure_count": 20,
-      "input_error_count": 6,
+      "hard_failure_count": 23,
+      "input_error_count": 7,
+      "gate_count": 26,
       "usable_primary_window_events": 0,
       "out_of_sample_events": 0,
       "verified_paper_sessions": 0
@@ -47,14 +74,89 @@
       "pipeline_run_id": "NEWS-SQLITE-C51F01179B111F4F43AB",
       "runtime_artifact_sha256": "cc8827736796b322a6d9925693499f075e87027f9f385b30aadf1a9cb262584c"
     },
+    "market_input_audit": {
+      "file": "market_input_audit.json",
+      "sha256": "3fd64a3521c6077ac5d30fd70fe6240d124ddec1fd53a8581bad6378c2fd8d31",
+      "decision": "BLOCKED",
+      "real_event_count": 200,
+      "events_after_market_input_cutoff": 200,
+      "factor_coverage_end": "2026-07-17",
+      "adjusted_price_coverage_end": "2024-12-31",
+      "tdx_raw_close_coverage_end": "2026-07-17"
+    },
+    "historical_news_overlap_audit": {
+      "file": "historical_news_overlap_audit.json",
+      "sha256": "fd7ec4d65ac3e2e04f2e11b3754420bf7195f08f87083f1c5f3dec7b57c3acb7",
+      "decision": "INSUFFICIENT_CAUSAL_OVERLAP",
+      "database_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+      "non_demo_events": 254,
+      "non_demo_report_versions": 260,
+      "causal_overlap_events": 0,
+      "publication_overlap_observed_too_late": 6,
+      "minimum_total_events_required": 31
+    },
     "news_enrichment_schema": {
       "file": "schemas/news_enrichment.schema.json",
       "sha256": "db0ccd08184fbcbac8aa4154c98774e93c5200d314c74f3a18cff6fd1789e406"
     },
+    "panel_inspection_schema": {
+      "file": "schemas/panel_inspection.schema.json",
+      "sha256": "1b2b4754caa5e92299938f4d6002c65bbaf1e49ff809e416ffe4b0bc0e8a401b"
+    },
+    "pb_ingestion_schema": {
+      "file": "schemas/pb_ingestion_manifest.schema.json",
+      "sha256": "81963da321f7054b0680b5bb41cf6007606cafc1f19b13ee9d7c405198a82e46"
+    },
+    "historical_news_overlap_schema": {
+      "file": "schemas/historical_news_overlap_audit.schema.json",
+      "sha256": "1c76c66b146b06c10adf70f4dc78d991e0f33487324303ae92e7c1ec466dd07c"
+    },
     "development_document": {
       "file": "docs/09_real_data_readiness_v0.5.md",
-      "sha256": "1c6668833bbd2e3b684e6645ea5fda8c147826848218d08f420127a3707b0592"
+      "sha256": "24a9d26ffc03ea2545c169617c542eaf54dd6720793f6ad449bd57d3d4c12bd7"
+    },
+    "artifact_inspector": {
+      "file": "src/evidence_alpha/artifact_inspection.py",
+      "sha256": "5c6908359c7fc4ade18c84c52b09a36f9881fcdb038a16a6872012f7722a8db0"
+    },
+    "historical_news_overlap_auditor": {
+      "file": "src/evidence_alpha/news_overlap.py",
+      "sha256": "f2031ca8ea13364de4adbf7d66f10519e63cc49020236b1bdc4b01725183ea74"
+    },
+    "readiness_evaluator": {
+      "file": "src/evidence_alpha/readiness.py",
+      "sha256": "2d80373c05cc13f6d3c0bbef69c46fc7a9265b774a950a81db23bd03c80b6972"
+    },
+    "readiness_cli": {
+      "file": "src/evidence_alpha/cli.py",
+      "sha256": "152533584220517b2e5b6f34a96376199ea640e4cf645bca0fa460eed89a1edd"
+    },
+    "readiness_tests": {
+      "file": "tests/test_readiness.py",
+      "sha256": "2428a269b2de1db7670eb98c4d203669fbd6653d3645d056b7d8d6f5421944ad"
+    },
+    "historical_news_overlap_tests": {
+      "file": "tests/test_news_overlap.py",
+      "sha256": "126519de6f64c71a0a0229f73bd623aca8fce42cd35e3405fe47920f63f9db83"
+    },
+    "development_document_builder": {
+      "file": "scripts/build_docs_v2.py",
+      "sha256": "8c589ea79a2cba6b789678332585d172cae05edb4c6da6118c7f0fe6de1840c1"
+    },
+    "development_word_document": {
+      "file": "deliverables/03_开发与部署文档.docx",
+      "sha256": "7a5543988b82977d1649cb0de31d7d0387bfbbd1307d1fcccf3c9551b4c76b39",
+      "pages_inspected": 6,
+      "visual_qa": "PASS"
     }
+  },
+  "external_inventory": {
+    "multi_factor_release_count": 0,
+    "latest_research_actions_run": 31964359490,
+    "latest_research_actions_artifact_count": 0,
+    "secondary_private_repository_branch_count": 0,
+    "external_repositories_modified": false,
+    "tdx_source_files_modified": false
   },
   "runtime": {
     "deployed_service": "http://127.0.0.1:8080",
@@ -69,13 +171,16 @@
   "readiness_rerun": {
     "exit_code": 1,
     "decision": "BLOCKED",
-    "hard_failure_count": 20,
+    "hard_failure_count": 23,
+    "input_error_count": 7,
+    "gate_count": 26,
     "same_gate_results_as_sealed_report": true
   },
   "decision": "BLOCKED",
   "authorization": {
     "live_trading": "NOT_GRANTED",
     "broker_execution": "BLOCKED",
+    "branch_push": "NOT_PERFORMED",
     "merge_tag_and_deploy": "BLOCKED_UNTIL_ALL_READINESS_GATES_PASS"
   }
 }

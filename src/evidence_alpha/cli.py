@@ -7,11 +7,14 @@ import os
 import sys
 
 from .api import serve
+from .artifact_inspection import build_panel_inspection_report
 from .demo import run_demo
 from .integration import config_from_asof, run_integration
+from .models import ContractError
 from .news_adapter import NewsAdapter, write_news_export
 from .news_enrichment import apply_news_enrichment
 from .news_enrichment_exporter import export_sqlite_news_enrichment
+from .news_overlap import build_news_overlap_audit, write_news_overlap_audit
 from .pipeline import config_from_cutoff, run_pipeline
 from .readiness import evaluate_release_readiness, write_readiness_report
 
@@ -117,6 +120,31 @@ def _parser() -> argparse.ArgumentParser:
     integrate.add_argument("--output-dir", required=True)
     verify = sub.add_parser("verify", help="verify an existing artifact directory")
     verify.add_argument("--artifact-dir", default="artifacts/demo")
+    inspect_panel = sub.add_parser(
+        "inspect-panel",
+        help="report deterministic content facts for a factor or price panel",
+    )
+    inspect_panel.add_argument("--input", required=True)
+    inspect_panel.add_argument(
+        "--kind",
+        required=True,
+        choices=("factor_weights", "adjusted_prices"),
+    )
+    inspect_panel.add_argument(
+        "--logical-path", help="relative path recorded in the report"
+    )
+    inspect_panel.add_argument("--output")
+    news_overlap = sub.add_parser(
+        "audit-news-overlap",
+        help="audit causal overlap between a read-only news snapshot and market coverage",
+    )
+    news_overlap.add_argument("--database", required=True)
+    news_overlap.add_argument("--factor-coverage-start", required=True)
+    news_overlap.add_argument("--adjusted-price-coverage-end", required=True)
+    news_overlap.add_argument("--minimum-event-count", type=int, default=30)
+    news_overlap.add_argument("--oos-fraction", type=float, default=0.30)
+    news_overlap.add_argument("--minimum-oos-events", type=int, default=10)
+    news_overlap.add_argument("--output", required=True)
     readiness = sub.add_parser(
         "readiness",
         help="evaluate fail-closed real-data, PB, and continuous Paper release gates",
@@ -124,6 +152,7 @@ def _parser() -> argparse.ArgumentParser:
     readiness.add_argument("--artifact-dir", required=True)
     readiness.add_argument("--factor-attestation")
     readiness.add_argument("--price-attestation")
+    readiness.add_argument("--pb-ingestion-manifest")
     readiness.add_argument("--pb-validation")
     readiness.add_argument("--pb-dry-run-manifest")
     readiness.add_argument("--pb-launch-bundle")
@@ -271,6 +300,65 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 1 if report["hard_failures"] else 0
+    if args.command == "inspect-panel":
+        source = Path(args.input)
+        output = Path(args.output) if args.output else None
+        try:
+            if output and source.resolve() == output.resolve():
+                raise ContractError("--output must not overwrite --input")
+            report = build_panel_inspection_report(
+                source,
+                args.kind,
+                logical_path=args.logical_path,
+            )
+            payload = json.dumps(
+                report,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            if output:
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.write_text(payload, encoding="utf-8")
+        except (ContractError, OSError) as exc:
+            print(
+                json.dumps(
+                    {"decision": "REJECT", "error": str(exc)},
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                file=sys.stderr,
+            )
+            return 2
+        print(payload)
+        return 0
+    if args.command == "audit-news-overlap":
+        database = Path(args.database)
+        output = Path(args.output)
+        try:
+            if database.resolve() == output.resolve():
+                raise ContractError("--output must not overwrite --database")
+            report = build_news_overlap_audit(
+                database,
+                factor_coverage_start=args.factor_coverage_start,
+                adjusted_price_coverage_end=args.adjusted_price_coverage_end,
+                minimum_event_count=args.minimum_event_count,
+                oos_fraction=args.oos_fraction,
+                minimum_oos_events=args.minimum_oos_events,
+            )
+            write_news_overlap_audit(report, output)
+        except (ContractError, OSError) as exc:
+            print(
+                json.dumps(
+                    {"decision": "REJECT", "error": str(exc)},
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                file=sys.stderr,
+            )
+            return 2
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if report["decision"] == "COHORT_CANDIDATE" else 1
     if args.command == "verify":
         source = Path(args.artifact_dir) / "audit.json"
         if not source.exists():
@@ -285,6 +373,7 @@ def main(argv: list[str] | None = None) -> int:
             artifact_dir=args.artifact_dir,
             factor_attestation_path=args.factor_attestation,
             price_attestation_path=args.price_attestation,
+            pb_ingestion_manifest_path=args.pb_ingestion_manifest,
             pb_validation_path=args.pb_validation,
             pb_dry_run_manifest_path=args.pb_dry_run_manifest,
             pb_launch_bundle_path=args.pb_launch_bundle,

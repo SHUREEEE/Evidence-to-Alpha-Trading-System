@@ -9,6 +9,7 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
+from .artifact_inspection import PanelInspection, PanelKind, inspect_input_panel
 from .models import ContractError, parse_date, parse_datetime
 from .news_enrichment import NewsEnrichment, load_news_enrichment
 
@@ -196,11 +197,30 @@ def _attested_quality(attestation: Any) -> dict[str, Any]:
     return quality if isinstance(quality, dict) else {}
 
 
+def _inspect_artifact(
+    path: Path | None,
+    kind: PanelKind,
+    label: str,
+    errors: list[str],
+) -> PanelInspection | None:
+    if path is None or not path.is_file():
+        return None
+    try:
+        return inspect_input_panel(path, kind)
+    except ContractError as exc:
+        errors.append(f"{label}: {exc}")
+        return None
+    except (OSError, TypeError, ValueError, OverflowError, KeyError) as exc:
+        errors.append(f"{label}: invalid artifact ({type(exc).__name__})")
+        return None
+
+
 def evaluate_release_readiness(
     *,
     artifact_dir: str | Path,
     factor_attestation_path: str | Path | None = None,
     price_attestation_path: str | Path | None = None,
+    pb_ingestion_manifest_path: str | Path | None = None,
     pb_validation_path: str | Path | None = None,
     pb_dry_run_manifest_path: str | Path | None = None,
     pb_launch_bundle_path: str | Path | None = None,
@@ -226,6 +246,13 @@ def evaluate_release_readiness(
     price_attestation = _read_json(
         Path(price_attestation_path).resolve() if price_attestation_path else None,
         "price attestation",
+        errors,
+    )
+    pb_ingestion = _read_json(
+        Path(pb_ingestion_manifest_path).resolve()
+        if pb_ingestion_manifest_path
+        else None,
+        "PB ingestion manifest",
         errors,
     )
     pb_validation = _read_json(
@@ -531,6 +558,9 @@ def evaluate_release_readiness(
     factor_artifact = _attested_artifact(factor_attestation)
     factor_production = _attested_production(factor_attestation)
     factor_quality = _attested_quality(factor_attestation)
+    factor_inspection = _inspect_artifact(
+        weights_path, "factor_weights", "factor artifact", errors
+    )
     factor_hash_ok, weights_hash = _artifact_hash_matches(
         weights_path, factor_artifact.get("sha256")
     )
@@ -571,13 +601,23 @@ def evaluate_release_readiness(
     required_end = max(return_end_dates) if return_end_dates else None
     factor_start = _date_or_none(factor_artifact.get("coverage_start"))
     factor_end = _date_or_none(factor_artifact.get("coverage_end"))
+    factor_contents_match = bool(
+        factor_inspection
+        and factor_start == factor_inspection.coverage_start
+        and factor_end == factor_inspection.coverage_end
+    )
+    actual_factor_start = (
+        factor_inspection.coverage_start if factor_inspection else None
+    )
+    actual_factor_end = factor_inspection.coverage_end if factor_inspection else None
     factor_coverage = bool(
         required_start
         and required_end
-        and factor_start
-        and factor_end
-        and factor_start <= required_start
-        and factor_end >= required_end
+        and actual_factor_start
+        and actual_factor_end
+        and factor_contents_match
+        and actual_factor_start <= required_start
+        and actual_factor_end >= required_end
         and report.get("gates", {}).get("factor_asof_not_future") is True
     )
     gates.extend(
@@ -588,6 +628,16 @@ def evaluate_release_readiness(
                 f"verified sha256={weights_hash or 'unavailable'}",
             ),
             _gate(
+                "factor_artifact_contents",
+                factor_contents_match,
+                (
+                    f"declared={factor_start}..{factor_end}, "
+                    f"actual={actual_factor_start}..{actual_factor_end}, "
+                    f"rows={factor_inspection.row_count if factor_inspection else 0}, "
+                    f"tickers={factor_inspection.ticker_count if factor_inspection else 0}"
+                ),
+            ),
+            _gate(
                 "factor_production_provenance",
                 factor_provenance,
                 "requires immutable production commit/run and PIT universe with no exceptions",
@@ -595,7 +645,10 @@ def evaluate_release_readiness(
             _gate(
                 "factor_coverage_through_t_plus_one",
                 factor_coverage,
-                f"coverage={factor_start}..{factor_end}, required={required_start}..{required_end}",
+                (
+                    f"coverage={actual_factor_start}..{actual_factor_end}, "
+                    f"required={required_start}..{required_end}"
+                ),
             ),
         ]
     )
@@ -609,6 +662,9 @@ def evaluate_release_readiness(
         else {}
     )
     adjustments = adjustments if isinstance(adjustments, dict) else {}
+    price_inspection = _inspect_artifact(
+        prices_path, "adjusted_prices", "price artifact", errors
+    )
     price_hash_ok, prices_hash = _artifact_hash_matches(
         prices_path, price_artifact.get("sha256")
     )
@@ -630,13 +686,22 @@ def evaluate_release_readiness(
     )
     price_start = _date_or_none(price_artifact.get("coverage_start"))
     price_end = _date_or_none(price_artifact.get("coverage_end"))
+    price_contents_match = bool(
+        price_inspection
+        and price_start == price_inspection.coverage_start
+        and price_end == price_inspection.coverage_end
+        and price_inspection.value_field == adjustments.get("price_field")
+    )
+    actual_price_start = price_inspection.coverage_start if price_inspection else None
+    actual_price_end = price_inspection.coverage_end if price_inspection else None
     price_coverage = bool(
         required_start
         and required_end
-        and price_start
-        and price_end
-        and price_start <= required_start
-        and price_end >= required_end
+        and actual_price_start
+        and actual_price_end
+        and price_contents_match
+        and actual_price_start <= required_start
+        and actual_price_end >= required_end
         and report.get("gates", {}).get("t_plus_one_prices") is True
     )
     gates.extend(
@@ -647,6 +712,17 @@ def evaluate_release_readiness(
                 f"verified sha256={prices_hash or 'unavailable'}",
             ),
             _gate(
+                "price_artifact_contents",
+                price_contents_match,
+                (
+                    f"declared={price_start}..{price_end}, "
+                    f"actual={actual_price_start}..{actual_price_end}, "
+                    f"field={price_inspection.value_field if price_inspection else None}, "
+                    f"rows={price_inspection.row_count if price_inspection else 0}, "
+                    f"tickers={price_inspection.ticker_count if price_inspection else 0}"
+                ),
+            ),
+            _gate(
                 "corporate_action_safe_prices",
                 corporate_action_safe,
                 "requires adjusted prices, split/dividend coverage, delistings, and no exceptions",
@@ -654,24 +730,44 @@ def evaluate_release_readiness(
             _gate(
                 "price_coverage_through_t_plus_one",
                 price_coverage,
-                f"coverage={price_start}..{price_end}, required={required_start}..{required_end}",
+                (
+                    f"coverage={actual_price_start}..{actual_price_end}, "
+                    f"required={required_start}..{required_end}"
+                ),
             ),
         ]
     )
 
+    pb_ingestion = pb_ingestion if isinstance(pb_ingestion, dict) else {}
     pb_validation = pb_validation if isinstance(pb_validation, dict) else {}
     pb_dry_run = pb_dry_run if isinstance(pb_dry_run, dict) else {}
     pb_bundle = pb_bundle if isinstance(pb_bundle, dict) else {}
+    integration_asof = _date_or_none(str(report.get("asof", ""))[:10])
+    pb_source = _as_path(pb_ingestion.get("source_file"), root)
+    pb_mapping = _as_path(pb_ingestion.get("mapping_file"), root)
     pb_feed_a = _as_path(pb_validation.get("borrow_feed"), root)
     pb_feed_b = _as_path(pb_dry_run.get("borrow_feed"), root)
+    pb_feed_c = _as_path(pb_ingestion.get("canonical_file"), root)
     same_pb_feed = bool(
         pb_feed_a
         and pb_feed_b
+        and pb_feed_c
         and pb_feed_a.resolve() == pb_feed_b.resolve()
+        and pb_feed_a.resolve() == pb_feed_c.resolve()
         and pb_feed_a.is_file()
     )
     pb_feed_hash = _sha256_file(pb_feed_a) if same_pb_feed and pb_feed_a else None
+    pb_source_hash_ok, _ = _artifact_hash_matches(
+        pb_source, pb_ingestion.get("source_file_sha256")
+    )
+    pb_mapping_hash_ok, _ = _artifact_hash_matches(
+        pb_mapping, pb_ingestion.get("mapping_file_sha256")
+    )
+    pb_canonical_hash_ok, pb_ingestion_hash = _artifact_hash_matches(
+        pb_feed_c, pb_ingestion.get("canonical_file_sha256")
+    )
     attested_pb_hashes = [
+        str(pb_ingestion.get("canonical_file_sha256", "")).casefold(),
         str(pb_validation.get("borrow_feed_sha256", "")).casefold(),
         str(pb_dry_run.get("borrow_feed_sha256", "")).casefold(),
         str(pb_bundle.get("borrow_feed_sha256", "")).casefold(),
@@ -683,13 +779,39 @@ def evaluate_release_readiness(
         and len(set(attested_pb_hashes)) == 1
         and attested_pb_hashes[0] == pb_feed_hash
     )
+    pb_ingestion_rows = _integer_or_none(pb_ingestion.get("rows"))
+    pb_ingestion_symbols = _integer_or_none(pb_ingestion.get("symbols_count"))
+    pb_ingestion_start = _date_or_none(pb_ingestion.get("date_min"))
+    pb_ingestion_end = _date_or_none(pb_ingestion.get("date_max"))
+    pb_ingestion_pass = bool(
+        pb_ingestion.get("workflow") == "pb_borrow_feed_ingestion"
+        and pb_ingestion.get("status") == "CANONICALIZED"
+        and pb_ingestion.get("real_source_attested") is True
+        and _non_placeholder(pb_ingestion.get("source_name"))
+        and _datetime_is_aware(pb_ingestion.get("received_at_utc"))
+        and pb_source_hash_ok
+        and pb_mapping_hash_ok
+        and pb_canonical_hash_ok
+        and pb_ingestion_hash == pb_feed_hash
+        and pb_ingestion_rows is not None
+        and pb_ingestion_rows > 0
+        and pb_ingestion_symbols is not None
+        and pb_ingestion_symbols > 0
+        and pb_ingestion_start is not None
+        and pb_ingestion_end is not None
+        and pb_ingestion_start <= pb_ingestion_end
+        and integration_asof is not None
+        and pb_ingestion_end >= integration_asof
+    )
     required_symbols_count = _integer_or_none(
         pb_validation.get("required_symbols_count")
     )
     pb_max_age_days = _integer_or_none(pb_validation.get("max_age_days"))
+    pb_validation_asof = _date_or_none(pb_validation.get("asof"))
     pb_validation_pass = bool(
         pb_validation.get("pass_fail") is True
         and pb_validation.get("failures") == []
+        and pb_validation_asof == integration_asof
         and required_symbols_count is not None
         and required_symbols_count > 0
         and pb_validation.get("missing_required_symbols") == []
@@ -698,7 +820,6 @@ def evaluate_release_readiness(
         and pb_max_age_days is not None
         and pb_max_age_days <= 1
     )
-    integration_asof = _date_or_none(str(report.get("asof", ""))[:10])
     pb_asof = _date_or_none(pb_dry_run.get("asof"))
     pb_dry_run_pass = bool(
         pb_dry_run.get("workflow") == "v4_pb_live_dry_run"
@@ -718,6 +839,18 @@ def evaluate_release_readiness(
     )
     gates.extend(
         [
+            _gate(
+                "pb_ingestion_provenance",
+                pb_ingestion_pass,
+                (
+                    f"source={pb_ingestion.get('source_name')}, "
+                    f"real={pb_ingestion.get('real_source_attested')}, "
+                    f"source hash={pb_source_hash_ok}, "
+                    f"mapping hash={pb_mapping_hash_ok}, "
+                    f"canonical hash={pb_canonical_hash_ok}, "
+                    f"date max={pb_ingestion_end}"
+                ),
+            ),
             _gate(
                 "pb_borrow_validation",
                 pb_validation_pass,
