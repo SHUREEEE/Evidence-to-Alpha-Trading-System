@@ -170,7 +170,7 @@ the 2026-08-20 news observations. PB evidence and continuous Paper sessions are
 absent. The sealed readiness decision is BLOCKED.
 
 See docs/09_real_data_readiness_v0.5.md and
-artifacts/news-real-preflight-v0.5/real_data_inventory_v0.5.json.
+evidence/v0.5.0-preflight/real_data_inventory.json.
 
 ## Inputs
 

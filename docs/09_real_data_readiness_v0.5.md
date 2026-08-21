@@ -57,10 +57,9 @@ claim to be a full database export. Every exported event is non-demo, but every
 event has at least one contract degradation. Industry-only events are not
 equivalent to verified company/ticker mappings.
 
-The machine-readable inventory is stored at
-artifacts/news-real-preflight-v0.5/real_data_inventory_v0.5.json. It contains
-only logical paths, counts, hashes, coverage dates, gate states, and required
-next inputs.
+The sealed machine-readable inventory is stored at
+evidence/v0.5.0-preflight/real_data_inventory.json. It contains only logical
+paths, counts, hashes, coverage dates, gate states, and required next inputs.
 
 ## Factor and Price State
 

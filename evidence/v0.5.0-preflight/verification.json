@@ -31,7 +31,7 @@
     },
     "development_document": {
       "file": "docs/09_real_data_readiness_v0.5.md",
-      "sha256": "58524ae9a9b426577776624f6b23d605d6339ef0e2e1f720077ea1141902bc09"
+      "sha256": "5c5c1b75f5507f82508b6dc1f7f58b4d5a0ddf3285b17e78b480402bffe15fad"
     }
   },
   "runtime": {
