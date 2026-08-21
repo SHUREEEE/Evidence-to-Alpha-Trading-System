@@ -36,12 +36,13 @@
    enrichment-file tampering. Python compilation, 37-file JSON parsing, two
    JSON Schema validations, credential scanning, and Git whitespace checks
    passed before sealing.
-7. VERIFY DATA: the source and latest isolated database snapshot share SHA-256
-   D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A.
-   The snapshot has 254 non-demo events, 260 reports, zero company impacts, 48
-   industry impacts, and zero report-level novelty fields. The retained
-   100-event API export belongs to the earlier F16FEB1F... snapshot and remains
-   explicitly historical.
+7. VERIFY DATA: News_Claws uses SQLite WAL mode, so a direct main-file copy was
+   rejected as incomplete. A SQLite online backup produced consistent snapshot
+   SHA-256 81D179EB... with integrity_check=ok and the same logical counts as
+   the source: 254 non-demo events, 260 reports, zero company impacts, 48
+   industry impacts, and zero report-level novelty fields. Of 254 events, 110
+   have at least one article published_at. The retained 100-event API export
+   belongs to the earlier F16FEB1F... snapshot and remains historical.
 8. VERIFY READINESS: the policy returned exit code 1, decision BLOCKED, 20 hard
    failures, zero usable primary events, zero OOS events, and zero verified
    Paper sessions.

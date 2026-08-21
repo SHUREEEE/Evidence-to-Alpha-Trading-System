@@ -1,11 +1,15 @@
 {
   "schema_version": "1.0",
   "inventory_id": "REAL-DATA-INVENTORY-20260821-V0.5",
-  "generated_at": "2026-08-21T14:25:00.7386636+08:00",
+  "generated_at": "2026-08-21T14:52:55.0528642+08:00",
   "decision": "BLOCKED",
   "database_snapshot": {
-    "logical_path": "artifacts/news-real-preflight-v0.5/analysis-v2.db",
-    "sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a",
+    "logical_path": "artifacts/news-real-preflight-v0.5/analysis-v3.db",
+    "sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+    "capture_method": "sqlite_online_backup",
+    "source_main_db_sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a",
+    "source_wal_sha256": "7a960ceb36dbc09b8bd926ab40fa31d204e4aa8549908c8cd4cd8897dde1a29f",
+    "integrity_check": "ok",
     "isolated_copy": true,
     "source_database_modified": false,
     "preview_service_stopped_after_export": true

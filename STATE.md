@@ -15,9 +15,11 @@
 ## Current release facts
 
 - Verified fact: v0.5 reads the maintained News_Claws API shape with an optional token supplied by environment-variable name.
-- Verified fact: the latest source and isolated database snapshot hashes both equal D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A; the source database was not modified.
+- Verified fact: News_Claws uses SQLite WAL mode; a main-file copy alone is incomplete. The consistent online-backup snapshot has SHA-256 81D179EB62A1E79469B39F0EE27375E575FA6699CDB3D339663FD0DCCF009F77 and integrity_check=ok.
+- Verified fact: the source main DB hash is D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A, the WAL hash is 7A960CEB36DBC09B8BD926AB40FA31D204E4AA8549908C8CD4CD8897DDE1A29F, and the source database was not modified.
 - Verified fact: the latest isolated database snapshot contains 254 non-demo events, 260 articles, 260 claims, 267 evidence records, 260 reports, 48 industry impacts, and zero company impacts.
 - Verified fact: zero of the 260 reports contains a top-level novelty field.
+- Verified fact: 110 of 254 events have at least one real article published_at; this can support partial publication-time enrichment but cannot clear missing novelty or investable mapping.
 - Verified fact: the retained 100-event export belongs to the earlier F16FEB1F... snapshot; it is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
 - Verified fact: v0.5 can apply a separately produced, exact-event-version PIT enrichment artifact without modifying News_Claws.
 - Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.

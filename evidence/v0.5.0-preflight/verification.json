@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "candidate": "v0.5.0-preflight",
-  "generated_at": "2026-08-21T14:41:58.6125399+08:00",
-  "baseline_commit": "3c8835df4094b0d900e5670df4702bb5e7796862",
+  "generated_at": "2026-08-21T14:54:20.2861866+08:00",
+  "baseline_commit": "a41daddbd28e7d6d030e04ebf74d4fa2678cd449",
   "branch": "codex/v0.5-real-readiness",
   "code_verification": {
     "tests_passed": 44,
@@ -18,8 +18,8 @@
   "artifacts": {
     "real_data_inventory": {
       "file": "real_data_inventory.json",
-      "sha256": "6b51ef73c08cc0396714d15527b9fa19cd9ba0872a6ef8136cdaeb94ecf9cd63",
-      "database_snapshot_sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a"
+      "sha256": "823c8388d811e91d6d553a17c7690b77d1920177a1b3aa60f9393ce0ce5b63b6",
+      "database_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77"
     },
     "readiness": {
       "file": "readiness.json",
@@ -34,7 +34,7 @@
     },
     "development_document": {
       "file": "docs/09_real_data_readiness_v0.5.md",
-      "sha256": "92ab73a2e248cab361f95729ae4e180e5ce6a3e65bafc19e5dfb190191a5cd45"
+      "sha256": "d83e0e3da444d5cfb97015c8d61af62a8b20f55c4b74cdfe3529be1d55dfd41c"
     }
   },
   "runtime": {

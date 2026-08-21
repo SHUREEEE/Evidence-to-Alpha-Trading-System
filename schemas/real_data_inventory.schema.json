@@ -25,10 +25,23 @@
     "decision": {"enum": ["BLOCKED", "READY_FOR_READINESS_EVALUATION"]},
     "database_snapshot": {
       "type": "object",
-      "required": ["logical_path", "sha256", "isolated_copy", "source_database_modified"],
+      "required": [
+        "logical_path",
+        "sha256",
+        "capture_method",
+        "source_main_db_sha256",
+        "source_wal_sha256",
+        "integrity_check",
+        "isolated_copy",
+        "source_database_modified"
+      ],
       "properties": {
         "logical_path": {"type": "string", "minLength": 1},
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "capture_method": {"const": "sqlite_online_backup"},
+        "source_main_db_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_wal_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "integrity_check": {"const": "ok"},
         "isolated_copy": {"const": true},
         "source_database_modified": {"const": false},
         "preview_service_stopped_after_export": {"type": "boolean"}

@@ -34,10 +34,13 @@ sessions.
 
 ## Current Real Data Inventory
 
-The latest isolated News_Claws database snapshot has SHA-256
-D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A.
-The source and isolated copy hashes were compared after copying. The source
-database was not modified.
+News_Claws uses SQLite WAL mode, so copying only the main database file is not
+a consistent logical snapshot. The current isolated snapshot was produced with
+the SQLite online backup API and has SHA-256
+81D179EB62A1E79469B39F0EE27375E575FA6699CDB3D339663FD0DCCF009F77.
+Its integrity check is ok, and its logical counts match the live read-only
+source. The source main file has SHA-256 D1D30FC4... and its WAL has SHA-256
+7A960CEB.... The source database was not modified.
 
 | Item | Current fact |
 |---|---:|
@@ -47,6 +50,7 @@ database was not modified.
 | Evidence records | 267 |
 | Reports | 260 |
 | Reports with top-level novelty | 0 |
+| Events with at least one published article time | 110 |
 | Company impacts | 0 |
 | Industry impacts | 48 |
 | Banking/financial-services impacts | 23 |
