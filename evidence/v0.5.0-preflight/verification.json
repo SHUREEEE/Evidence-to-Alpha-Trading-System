@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "candidate": "v0.5.0-preflight",
-  "generated_at": "2026-08-21T23:49:54.2755331+08:00",
-  "baseline_commit": "3d4db0a0a38ecb22e89939a9ec19b347a867f429",
+  "generated_at": "2026-08-21T18:06:59.461236+00:00",
+  "baseline_commit": "298f59a05d4780590a4f2c92e51ff35040e7d576",
   "branch": "codex/v0.5-real-readiness",
   "code_verification": {
-    "tests_passed": 70,
+    "tests_passed": 73,
     "subtests_passed": 8,
     "tests_failed": 0,
     "warnings_as_errors": true,
@@ -43,7 +43,10 @@
     "development_docx_pages_inspected": 6,
     "libreoffice_renderer_available": false,
     "sqlite_read_only_invariant_test": true,
-    "pending_wal_rejection_test": true
+    "pending_wal_rejection_test": true,
+    "sec_edgar_contract_tests": 3,
+    "sealed_news_bundle_loader": true,
+    "sec_user_agent_placeholder_rejection": true
   },
   "artifacts": {
     "real_data_inventory": {
@@ -148,6 +151,18 @@
       "sha256": "7a5543988b82977d1649cb0de31d7d0387bfbbd1307d1fcccf3c9551b4c76b39",
       "pages_inspected": 6,
       "visual_qa": "PASS"
+    },
+    "sec_edgar_exporter": {
+      "file": "src/evidence_alpha/sec_edgar.py",
+      "sha256": "a42ac86b9c32bb53b149bb5df95a6befef14dcad8263695dc1cb9300cbf2293a"
+    },
+    "sec_edgar_tests": {
+      "file": "tests/test_sec_edgar.py",
+      "sha256": "2baa20d7f5f2d15615d67355251b14ef1f590c7b7866db0c9a4270eab247b928"
+    },
+    "news_bundle_loader": {
+      "file": "src/evidence_alpha/news_adapter.py",
+      "sha256": "33980a496c178183ea5aeb026c41b0a771be4caaeb92e2375a6144f28c3a4def"
     }
   },
   "external_inventory": {
