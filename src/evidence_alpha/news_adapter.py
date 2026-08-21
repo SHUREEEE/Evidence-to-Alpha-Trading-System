@@ -49,6 +49,69 @@ class NewsExport:
     manifest: dict[str, Any]
 
 
+def load_news_export(output_dir: str | Path) -> NewsExport:
+    """Load an immutable news export bundle without contacting its source."""
+    output = Path(output_dir)
+    required = {
+        "events": output / "events.json",
+        "evidence": output / "evidence.json",
+        "mappings": output / "mappings.csv",
+        "manifest": output / "news_manifest.json",
+    }
+    missing = [str(path) for path in required.values() if not path.is_file()]
+    if missing:
+        raise ContractError(f"news export is missing required files: {', '.join(missing)}")
+    try:
+        raw_events = json.loads(required["events"].read_text(encoding="utf-8"))
+        raw_evidence = json.loads(required["evidence"].read_text(encoding="utf-8"))
+        manifest = json.loads(required["manifest"].read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError(f"news export contains invalid JSON: {type(exc).__name__}") from exc
+    if not isinstance(raw_events, list) or not isinstance(raw_evidence, dict):
+        raise ContractError("news export events/evidence must have the expected JSON shapes")
+    if not isinstance(manifest, dict):
+        raise ContractError("news export manifest must be a JSON object")
+    events = [EventSnapshot.from_dict(item) for item in raw_events if isinstance(item, dict)]
+    if len(events) != len(raw_events):
+        raise ContractError("news export events must contain only JSON objects")
+    seen_refs: set[str] = set()
+    for event in events:
+        if event.ref in seen_refs:
+            raise ContractError(f"news export contains duplicate event ref: {event.ref}")
+        seen_refs.add(event.ref)
+    evidence_rows = raw_evidence.get("evidence")
+    if not isinstance(evidence_rows, list):
+        raise ContractError("news export evidence must contain an evidence list")
+    evidence: dict[str, EvidenceRecord] = {}
+    for item in evidence_rows:
+        if not isinstance(item, dict):
+            raise ContractError("news export evidence rows must be objects")
+        record = EvidenceRecord.from_dict(item)
+        if record.evidence_id in evidence and evidence[record.evidence_id] != record:
+            raise ContractError(f"news export evidence changed: {record.evidence_id}")
+        evidence[record.evidence_id] = record
+    mappings: list[EntityMapping] = []
+    try:
+        with required["mappings"].open(encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                entity = str(row.get("entity", "")).strip()
+                ticker = str(row.get("ticker", "")).strip().upper()
+                sector = str(row.get("sector", "")).strip()
+                if not entity or not ticker or not sector:
+                    raise ContractError("news export mapping rows require entity, ticker, and sector")
+                try:
+                    multiplier = float(row.get("impact_multiplier", "1.0"))
+                except (TypeError, ValueError) as exc:
+                    raise ContractError("news export mapping impact_multiplier must be numeric") from exc
+                event_ref = str(row.get("event_ref", "")).strip() or None
+                if event_ref and event_ref not in seen_refs:
+                    raise ContractError(f"news export mapping references unknown event: {event_ref}")
+                mappings.append(EntityMapping(entity, ticker, sector, multiplier, event_ref))
+    except OSError as exc:
+        raise ContractError(f"news export mappings could not be read: {exc}") from exc
+    return NewsExport(events=events, evidence=evidence, mappings=mappings, manifest=manifest)
+
+
 class NewsAdapter:
     """Read-only adapter for the News Claws v1 HTTP API."""
 

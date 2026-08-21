@@ -234,6 +234,50 @@ placeholder values cannot pass runtime hash and provenance checks.
 
 ## Operator Command
 
+### Official SEC event route
+
+The integration accepts a sealed news export directory in addition to the
+News_Claws HTTP API. `sec-edgar-export` retrieves official EDGAR submissions
+and the cited filing document, records the SEC acceptance timestamp, maps the
+issuer ticker from an explicit CIK specification, and emits external SEC URLs
+for every evidence record. Direction is a deterministic, documented keyword
+classification of the filed document; unresolved classifications remain
+`uncertain` rather than being invented. Novelty is derived only from prior
+same-ticker filings in the preceding 30 days.
+
+The command requires a real contact email in `--user-agent` and rejects
+placeholder domains. It must be run with the operator's own SEC-compliant
+identity and a source-retention policy. This route supplies event evidence
+only; it cannot attest PIT factor weights, corporate-action-safe prices, PB
+borrow, or Paper sessions.
+
+    python -m evidence_alpha sec-edgar-export
+      --cik NVDA=0001045810
+      --cik AMD=0000002488
+      --user-agent "Evidence-to-Alpha research@your-real-domain.example"
+      --start-date 2022-09-26
+      --end-date 2024-11-30
+      --forms 8-K 10-Q 10-K
+      --max-events 100
+      --output-dir artifacts/news-sec
+
+Replace the example contact address before execution. The resulting bundle
+can be consumed without the HTTP service:
+
+    python -m evidence_alpha integrate
+      --news-export-dir artifacts/news-sec
+      --factor-root path/to/multi-factor-alpha-platform
+      --weights path/to/pit/weights.parquet
+      --prices path/to/corporate-action-safe/prices.parquet
+      --asof 2024-11-30T16:00:00+00:00
+      --data-classification real
+      --minimum-event-count 30
+      --minimum-oos-events 10
+      --rolling-folds 3
+      --output-dir artifacts/integrated-real
+
+### News_Claws route
+
 First apply a production enrichment artifact during the read-only export or
 integration:
 
@@ -256,6 +300,12 @@ integration:
       --news-limit 200
       --news-page-size 200
       --news-enrichment path/to/news_enrichment.json
+      ...
+
+For a previously exported bundle, replace the HTTP arguments with:
+
+    python -m evidence_alpha integrate
+      --news-export-dir artifacts/news-sec
       ...
 
 Then run the policy only after producing one causally valid real integration:
@@ -296,9 +346,9 @@ The read-only artifact API exposes the sealed result at:
    historical causal-overlap auditing without raw-news retention, PB ingestion
    provenance with four-way canonical hash agreement,
    attestations, and Paper evidence contracts.
-6. VERIFY: 70 tests and 8 subtests pass with warnings as errors. Coverage includes exact
+6. VERIFY: 73 tests and 8 subtests pass with warnings as errors. Coverage includes exact
    event references, duplicate and unknown references, strict integer versions,
-   placeholder ticker and local URL rejection, effective dates, availability
+   placeholder ticker and local URL rejection, SEC User-Agent validation, official filing bundle reload, effective dates, availability
    chronology, report cutoff enforcement, pending-WAL rejection, read-only
    database invariants, partial-selection coverage, CLI wiring, input and
    enrichment-file tamper detection, false coverage declarations, and raw-close

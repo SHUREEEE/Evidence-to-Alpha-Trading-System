@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 import json
 import os
@@ -17,6 +18,7 @@ from .news_enrichment_exporter import export_sqlite_news_enrichment
 from .news_overlap import build_news_overlap_audit, write_news_overlap_audit
 from .pipeline import config_from_cutoff, run_pipeline
 from .readiness import evaluate_release_readiness, write_readiness_report
+from .sec_edgar import SecExportConfig, export_sec_edgar, parse_company_spec, write_sec_export
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -81,6 +83,19 @@ def _parser() -> argparse.ArgumentParser:
         help="explicitly retain unresolved refs that lack eligible published_at",
     )
     news_sqlite.add_argument("--output", required=True)
+    sec_export = sub.add_parser(
+        "sec-edgar-export",
+        help="export official SEC filings as point-in-time event versions",
+    )
+    sec_export.add_argument("--cik", action="append", required=True, help="TICKER=10_DIGIT_CIK; repeatable")
+    sec_export.add_argument("--user-agent", required=True, help="client identity plus a real contact email")
+    sec_export.add_argument("--start-date", required=True)
+    sec_export.add_argument("--end-date", required=True)
+    sec_export.add_argument("--forms", nargs="+", default=["8-K", "10-Q", "10-K"])
+    sec_export.add_argument("--max-events", type=int, default=100)
+    sec_export.add_argument("--request-delay-seconds", type=float, default=0.2)
+    sec_export.add_argument("--skip-documents", action="store_true")
+    sec_export.add_argument("--output-dir", required=True)
     integrate = sub.add_parser(
         "integrate",
         help="fuse News Claws event alpha into multi-factor weights before V4 controls",
@@ -107,6 +122,10 @@ def _parser() -> argparse.ArgumentParser:
     integrate.add_argument(
         "--news-enrichment",
         help="versioned PIT enrichment JSON for published_at, novelty, and mappings",
+    )
+    integrate.add_argument(
+        "--news-export-dir",
+        help="read a previously sealed news export bundle instead of the HTTP API",
     )
     integrate.add_argument("--overlay-scale", type=float, default=0.02)
     integrate.add_argument("--max-overlay-per-name", type=float, default=0.01)
@@ -233,6 +252,22 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0
+    if args.command == "sec-edgar-export":
+        bundle = export_sec_edgar(
+            [parse_company_spec(value) for value in args.cik],
+            user_agent=args.user_agent,
+            config=SecExportConfig(
+                start_date=date.fromisoformat(args.start_date),
+                end_date=date.fromisoformat(args.end_date),
+                forms=tuple(args.forms),
+                max_events=args.max_events,
+                fetch_documents=not args.skip_documents,
+                request_delay_seconds=args.request_delay_seconds,
+            ),
+        )
+        paths = write_sec_export(bundle, args.output_dir)
+        print(json.dumps({"event_versions": len(bundle.events), "output_dir": args.output_dir, "paths": paths}, ensure_ascii=False, indent=2))
+        return 0
     if args.command == "news-enrichment-sqlite":
         enrichment = export_sqlite_news_enrichment(
             database_path=args.database,
@@ -258,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         report = run_integration(
             news_base_url=args.news_base_url,
             news_admin_token=os.getenv(args.news_token_env),
+            news_export_dir=args.news_export_dir,
             news_enrichment_path=args.news_enrichment,
             factor_root=args.factor_root,
             weights_path=args.weights,

@@ -33,6 +33,11 @@
 - Verified fact: SQLite and input events hashes, sizes, and modification times are checked before and after extraction; a non-empty WAL, missing exact report, post-cutoff article, missing published_at, or changed input fails closed.
 - Verified fact: the maintained no-cursor API supports an explicit page size of 200 in both news-export and integrate; the legacy-compatible default remains 100.
 - Verified fact: v0.5 can apply a separately produced, exact-event-version PIT enrichment artifact without modifying News_Claws.
+- Verified fact: the integration can now load a sealed news export bundle without contacting its source through `--news-export-dir`.
+- Verified fact: `sec-edgar-export` creates official SEC filing event versions with acceptance timestamps, external filing evidence URLs, explicit CIK-to-ticker mappings, deterministic text direction, and prior-30-day novelty. It rejects missing or placeholder User-Agent email addresses.
+- Verified fact: current `http://127.0.0.1:8765` still returns the synthetic demonstration event; no SEC bundle was generated because a real SEC contact email has not been supplied.
+- Verified fact: the latest local V6.5 OOS weights end on 2026-07-17, while the inspected adjusted-price panel ends on 2024-12-31 and has no corporate-action or delisting attestation.
+- Verified fact: the current code suite passes 73 tests after adding SEC export and sealed-bundle coverage.
 - Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.
 - Verified fact: partial enrichment retains unresolved degradations and __UNMAPPED__; corrected observations move forward to enrichment availability time.
 - Verified fact: a caller-provided real label is downgraded when news mappings are placeholders or the API contract is degraded.

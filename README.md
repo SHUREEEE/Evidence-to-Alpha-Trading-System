@@ -50,6 +50,41 @@ degraded; it cannot clear readiness until every visible event has no unresolved
 contract degradation. The contract is
 `schemas/news_enrichment.schema.json`.
 
+For an official, non-synthetic event source, the project can export SEC EDGAR
+filings into the same immutable bundle format. The SEC User-Agent must contain
+a real contact email; placeholder domains are rejected. Official filings are
+not a substitute for a licensed market-data or PB feed, and the bundle still
+has to pass all event, price, factor, and Paper gates.
+
+```powershell
+python -m evidence_alpha sec-edgar-export `
+  --cik NVDA=0001045810 `
+  --cik AMD=0000002488 `
+  --user-agent "Evidence-to-Alpha research@your-real-domain.example" `
+  --start-date 2022-09-26 `
+  --end-date 2024-11-30 `
+  --forms 8-K 10-Q 10-K `
+  --max-events 100 `
+  --output-dir artifacts/news-sec
+```
+
+Replace the example contact address with an authorized real address before
+executing. Integrate a sealed bundle without contacting its source:
+
+```powershell
+python -m evidence_alpha integrate `
+  --news-export-dir artifacts/news-sec `
+  --factor-root C:\path\to\multi-factor-alpha-platform `
+  --weights C:\path\to\pit\weights.parquet `
+  --prices C:\path\to\corporate-action-safe\prices.parquet `
+  --asof 2024-11-30T16:00:00+00:00 `
+  --data-classification real `
+  --minimum-event-count 30 `
+  --minimum-oos-events 10 `
+  --rolling-folds 3 `
+  --output-dir artifacts/integrated-real
+```
+
 Run the complete integration with real factor artifacts:
 
 ```powershell
@@ -207,7 +242,7 @@ rejects pending WAL data. The sealed partial run resolved real
 `published_at` for 56 of 200 event versions and explicitly retained 144
 unresolved versions. All 200 remain contract-degraded because novelty or
 investable company/ticker mapping is absent. The mechanism is covered by the
-70-test suite, including false coverage declarations, raw-close substitution,
+73-test suite, including false coverage declarations, raw-close substitution,
 input tampering, and read-only database invariants.
 
 A separate historical-overlap audit now inspects every non-demo report in the

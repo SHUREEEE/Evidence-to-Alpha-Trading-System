@@ -28,7 +28,7 @@ from .multifactor_adapter import (
     write_v4_staging_cache,
     write_weight_panel_csv,
 )
-from .news_adapter import NewsAdapter, NewsExport, write_news_export
+from .news_adapter import NewsAdapter, NewsExport, load_news_export, write_news_export
 from .news_enrichment import apply_news_enrichment
 from .signals import SignalConfig, generate_signals, lineage_by_ticker
 from .study import run_event_study
@@ -94,6 +94,7 @@ def run_integration(
     sectors_path: str | Path | None = None,
     prices_path: str | Path | None = None,
     news_admin_token: str | None = None,
+    news_export_dir: str | Path | None = None,
     news_enrichment_path: str | Path | None = None,
     news_limit: int = 100,
     news_page_size: int = 100,
@@ -106,11 +107,14 @@ def run_integration(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
 
-    news = NewsAdapter(news_base_url, admin_token=news_admin_token).export(
-        limit=news_limit,
-        allow_synthetic=allow_synthetic_news,
-        page_size=news_page_size,
-    )
+    if news_export_dir:
+        news = load_news_export(news_export_dir)
+    else:
+        news = NewsAdapter(news_base_url, admin_token=news_admin_token).export(
+            limit=news_limit,
+            allow_synthetic=allow_synthetic_news,
+            page_size=news_page_size,
+        )
     if news_enrichment_path:
         news = apply_news_enrichment(news, news_enrichment_path)
     news_paths = write_news_export(news, output / "news_export")

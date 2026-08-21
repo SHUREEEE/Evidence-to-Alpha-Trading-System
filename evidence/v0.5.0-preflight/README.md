@@ -20,7 +20,7 @@ readiness gaps, not a production release.
 
 Verified result:
 
-- 70 automated tests and 8 subtests passed with warnings promoted to errors.
+- 73 automated tests and 8 subtests passed with warnings promoted to errors.
 - Python compilation, 128-file JSON parsing, twelve JSON Schema instance checks,
   credential scanning, and Git whitespace checks passed.
 - Exact-event PIT enrichment, report cutoffs, pending-WAL rejection, read-only
