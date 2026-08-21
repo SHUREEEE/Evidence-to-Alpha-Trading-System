@@ -349,6 +349,73 @@ class ReadinessTests(unittest.TestCase):
             self.assertEqual(report["decision"], "BLOCKED")
             self.assertIn("pb_real_feed_crosscheck", report["hard_failures"])
 
+    def test_changed_news_enrichment_breaks_provenance_gate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = _positive_bundle(root)
+            enrichment_payload = {
+                "schema_version": "1.0",
+                "enrichment_type": "news_event_enrichment",
+                "generated_at": "2026-01-02T00:00:00+00:00",
+                "source": {
+                    "synthetic": False,
+                    "repository": "SHUREEEE/News_Claws",
+                    "commit": "a" * 40,
+                    "pipeline_run_id": "NEWS-RUN-001",
+                    "methodology": "PIT production novelty scoring",
+                },
+                "events": [
+                    {
+                        "event_id": "E00",
+                        "event_version": 1,
+                        "available_at": "2026-01-01T13:00:00+00:00",
+                        "source_urls": [
+                            "https://news0.trusted-source.com/item/0"
+                        ],
+                        "novelty": 0.8,
+                        "mappings": [],
+                    }
+                ],
+            }
+            enrichment = _write_json(
+                root / "production" / "news_enrichment.json",
+                enrichment_payload,
+            )
+            report_path = paths["artifacts"] / "report.json"
+            integration_report = json.loads(
+                report_path.read_text(encoding="utf-8")
+            )
+            integration_report["news_manifest"]["enrichment"] = {
+                "schema_version": "1.0",
+                "artifact": str(enrichment),
+                "sha256": _digest(enrichment),
+                "synthetic": False,
+                "source_repository": "SHUREEEE/News_Claws",
+                "source_commit": "a" * 40,
+                "pipeline_run_id": "NEWS-RUN-001",
+                "methodology": "PIT production novelty scoring",
+                "generated_at": "2026-01-02T00:00:00+00:00",
+                "applied_event_refs": ["E00:v1"],
+                "unresolved_event_refs": [],
+            }
+            _write_json(report_path, integration_report)
+
+            initial = _evaluate(paths)
+            self.assertEqual(
+                initial["decision"], "READY_FOR_LIVE_AUTHORIZATION_REVIEW"
+            )
+
+            enrichment.write_text(
+                json.dumps(enrichment_payload, indent=4),
+                encoding="utf-8",
+            )
+            report = _evaluate(paths)
+
+            self.assertEqual(report["decision"], "BLOCKED")
+            self.assertIn(
+                "news_enrichment_provenance", report["hard_failures"]
+            )
+
     def test_malformed_numeric_and_datetime_fields_fail_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             paths = _positive_bundle(Path(directory))

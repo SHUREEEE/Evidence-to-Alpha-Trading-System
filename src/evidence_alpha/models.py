@@ -164,6 +164,7 @@ class EntityMapping:
     ticker: str
     sector: str
     impact_multiplier: float = 1.0
+    event_ref: str | None = None
 
 
 @dataclass(frozen=True)
@@ -241,4 +242,3 @@ class Fill:
         result = asdict(self)
         result["trade_date"] = self.trade_date.isoformat()
         return result
-

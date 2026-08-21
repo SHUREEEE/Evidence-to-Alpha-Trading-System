@@ -10,7 +10,7 @@
     "usable_primary_window_events": 0
   },
   "decision": "BLOCKED",
-  "evaluated_at": "2026-08-21T13:40:28.520201+08:00",
+  "evaluated_at": "2026-08-21T14:40:15.367801+08:00",
   "facts": [
     "A caller-provided real label is not sufficient for this policy.",
     "Every external data class is cross-checked against provenance or file hashes.",
@@ -45,6 +45,12 @@
       "detail": "decision=INCONCLUSIVE, failed=['double_cost_exceeds_factor_baseline', 'event_sample_sufficient', 'oos_primary_window_positive', 'oos_sample_sufficient', 'real_data_classification', 'rolling_folds_complete', 'rolling_primary_window_stable']",
       "name": "robustness_and_rolling",
       "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "raw News_Claws contract used without enrichment",
+      "name": "news_enrichment_provenance",
+      "passed": true,
       "severity": "hard"
     },
     {
@@ -185,6 +191,7 @@
   "schema_version": "1.0",
   "verified_hashes": {
     "factor_weights": "54dceb52dba55cfef16865b353d875e2724eebfe678f9c38672d6a62714faca0",
+    "news_enrichment": null,
     "paper_sessions": {},
     "pb_borrow_feed": null,
     "prices": "20929844fc88af17dbe8895532c52edb4a86e851d32d6680e11af60ee0db3240"

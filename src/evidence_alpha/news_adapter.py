@@ -651,7 +651,14 @@ def write_news_export(bundle: NewsExport, output_dir: str | Path) -> dict[str, P
     )
     with paths["mappings"].open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
-            handle, fieldnames=["entity", "ticker", "sector", "impact_multiplier"]
+            handle,
+            fieldnames=[
+                "entity",
+                "ticker",
+                "sector",
+                "impact_multiplier",
+                "event_ref",
+            ],
         )
         writer.writeheader()
         for item in bundle.mappings:
@@ -661,6 +668,7 @@ def write_news_export(bundle: NewsExport, output_dir: str | Path) -> dict[str, P
                     "ticker": item.ticker,
                     "sector": item.sector,
                     "impact_multiplier": item.impact_multiplier,
+                    "event_ref": item.event_ref or "",
                 }
             )
     paths["manifest"].write_text(

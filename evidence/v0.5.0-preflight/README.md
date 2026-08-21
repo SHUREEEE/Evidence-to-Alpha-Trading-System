@@ -11,8 +11,11 @@ readiness gaps, not a production release.
 
 Verified result:
 
-- 33 automated tests passed with warnings promoted to errors.
-- Python compilation, JSON parsing, and Git whitespace checks passed.
+- 44 automated tests passed with warnings promoted to errors.
+- Python compilation, 37-file JSON parsing, two JSON Schema validations,
+  credential scanning, and Git whitespace checks passed.
+- Exact-event PIT enrichment, partial-degradation retention, event-scoped
+  mappings, CLI wiring, and file-tamper detection are covered.
 - Readiness returned exit code 1, decision BLOCKED, and 20 hard failures.
 - The deployed 127.0.0.1:8080 service remains v0.4.0 and read-only.
 - The isolated 8016 preflight service was stopped.

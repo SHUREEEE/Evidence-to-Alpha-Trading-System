@@ -9,7 +9,8 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
-from .models import parse_date, parse_datetime
+from .models import ContractError, parse_date, parse_datetime
+from .news_enrichment import NewsEnrichment, load_news_enrichment
 
 
 MINIMUM_PRIMARY_EVENTS = 30
@@ -33,6 +34,17 @@ PLACEHOLDER_HOSTS = {
     "example.net",
     "localhost",
 }
+NON_PUBLIC_HOST_SUFFIXES = (
+    ".example",
+    ".home",
+    ".internal",
+    ".invalid",
+    ".lan",
+    ".local",
+    ".localdomain",
+    ".localhost",
+    ".test",
+)
 
 
 def _gate(name: str, passed: bool, detail: str) -> dict[str, object]:
@@ -87,7 +99,7 @@ def _external_url(value: object) -> bool:
     host = (parsed.hostname or "").casefold().rstrip(".")
     if parsed.scheme not in {"http", "https"} or not host:
         return False
-    if host in PLACEHOLDER_HOSTS or host.endswith((".invalid", ".test", ".example")):
+    if host in PLACEHOLDER_HOSTS or host.endswith(NON_PUBLIC_HOST_SUFFIXES):
         return False
     try:
         address = ip_address(host)
@@ -331,6 +343,70 @@ def evaluate_release_readiness(
                 ),
             ),
         ]
+    )
+
+    enrichment_metadata = news_manifest.get("enrichment")
+    enrichment_hash: str | None = None
+    enrichment_valid = enrichment_metadata is None
+    enrichment_detail = "raw News_Claws contract used without enrichment"
+    if enrichment_metadata is not None:
+        if not isinstance(enrichment_metadata, dict):
+            errors.append("news enrichment: manifest metadata must be an object")
+            enrichment_valid = False
+            enrichment_detail = "manifest metadata is invalid"
+        else:
+            enrichment_path = _as_path(enrichment_metadata.get("artifact"), root)
+            enrichment_hash_ok, enrichment_hash = _artifact_hash_matches(
+                enrichment_path, enrichment_metadata.get("sha256")
+            )
+            loaded_enrichment: NewsEnrichment | None = None
+            try:
+                loaded_enrichment = load_news_enrichment(enrichment_path) if enrichment_path else None
+            except ContractError as exc:
+                errors.append(f"news enrichment: {exc}")
+            expected_refs = (
+                sorted(item.event_ref for item in loaded_enrichment.events)
+                if loaded_enrichment
+                else []
+            )
+            generated_matches = bool(
+                loaded_enrichment
+                and _datetime_is_aware(enrichment_metadata.get("generated_at"))
+                and parse_datetime(
+                    str(enrichment_metadata.get("generated_at")),
+                    "enrichment.generated_at",
+                )
+                == loaded_enrichment.generated_at
+            )
+            enrichment_valid = bool(
+                loaded_enrichment
+                and enrichment_hash_ok
+                and enrichment_path
+                and not _is_fixture_path(enrichment_path)
+                and enrichment_metadata.get("schema_version") == "1.0"
+                and enrichment_metadata.get("synthetic") is False
+                and enrichment_metadata.get("source_repository")
+                == loaded_enrichment.repository
+                and enrichment_metadata.get("source_commit")
+                == loaded_enrichment.commit
+                and enrichment_metadata.get("pipeline_run_id")
+                == loaded_enrichment.pipeline_run_id
+                and enrichment_metadata.get("methodology")
+                == loaded_enrichment.methodology
+                and generated_matches
+                and enrichment_metadata.get("applied_event_refs") == expected_refs
+                and enrichment_metadata.get("unresolved_event_refs") == []
+            )
+            enrichment_detail = (
+                f"hash_ok={enrichment_hash_ok}, applied={len(expected_refs)}, "
+                f"unresolved={enrichment_metadata.get('unresolved_event_refs')}"
+            )
+    gates.append(
+        _gate(
+            "news_enrichment_provenance",
+            enrichment_valid,
+            enrichment_detail,
+        )
     )
 
     source_urls = news_manifest.get("source_urls_by_event_version")
@@ -755,6 +831,7 @@ def evaluate_release_readiness(
             "paper_sessions": len(verified_paper_hashes),
         },
         "verified_hashes": {
+            "news_enrichment": enrichment_hash,
             "factor_weights": weights_hash,
             "prices": prices_hash,
             "pb_borrow_feed": pb_feed_hash,

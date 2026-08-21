@@ -26,13 +26,22 @@
 5. DEVELOP: added current News_Claws compatibility, token-by-environment,
    conservative timestamp conversion, mapping quarantine, caller-label
    downgrade, readiness CLI/API, artifact hashes, provenance, PB, and Paper
-   checks, including a three-way PB borrow-file hash cross-check.
-6. VERIFY CODE: 33/33 tests passed with warnings as errors. Python compilation
-   and Git whitespace checks passed. Malformed numbers and datetimes fail the
-   input-contract gate without an unhandled exception.
-7. VERIFY DATA: the isolated database has 245 non-demo events and zero company
-   impacts. The latest export has 100 events, zero ticker mappings, 15
-   industry-only mappings, 85 unmapped events, and missing novelty for all 100.
+   checks, including a three-way PB borrow-file hash cross-check. Added an
+   exact-event-version PIT news-enrichment contract with external provenance,
+   effective dates, availability timestamps, and fail-closed partial state.
+6. VERIFY CODE: 44/44 tests passed with warnings as errors. Coverage now
+   includes strict integer versions, duplicate/unknown event references,
+   placeholder and local-source rejection, PIT dates, partial enrichment,
+   signal generation, event-scoped mapping, CSV round-trip, CLI wiring, and
+   enrichment-file tampering. Python compilation, 37-file JSON parsing, two
+   JSON Schema validations, credential scanning, and Git whitespace checks
+   passed before sealing.
+7. VERIFY DATA: the source and latest isolated database snapshot share SHA-256
+   D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A.
+   The snapshot has 254 non-demo events, 260 reports, zero company impacts, 48
+   industry impacts, and zero report-level novelty fields. The retained
+   100-event API export belongs to the earlier F16FEB1F... snapshot and remains
+   explicitly historical.
 8. VERIFY READINESS: the policy returned exit code 1, decision BLOCKED, 20 hard
    failures, zero usable primary events, zero OOS events, and zero verified
    Paper sessions.
@@ -46,6 +55,7 @@
 ## Current decision
 
 - Readiness mechanism: PASS.
+- PIT news enrichment mechanism: PASS; production enrichment artifact absent.
 - News contract completeness: BLOCKED.
 - Statistical sample and OOS validation: BLOCKED.
 - T+1 PIT factor and corporate-action-safe prices: BLOCKED.
@@ -55,7 +65,9 @@
 
 ## Next inputs
 
-1. Stable novelty and verified point-in-time company/ticker mappings.
+1. A production enrichment artifact with stable novelty, verified
+   point-in-time company/ticker mappings, exact event versions, external
+   sources, and availability-time provenance.
 2. PIT weights and adjusted or total-return prices through each event return
    endpoint.
 3. A real security-level PB borrow feed and matching validation artifacts.

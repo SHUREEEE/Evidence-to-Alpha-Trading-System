@@ -166,7 +166,7 @@ class IntegrationTests(unittest.TestCase):
                 )
             self.assertEqual(report["status"], "READY_FOR_PAPER_RESEARCH")
             self.assertEqual(report["decision"], "INCONCLUSIVE")
-            self.assertEqual(report["release"], "v0.4.0-integration")
+            self.assertEqual(report["release"], "v0.5.0-integration")
             self.assertEqual(report["data_classification"], "synthetic")
             self.assertEqual(
                 report["independent_validation"]["decision"], "INCONCLUSIVE"

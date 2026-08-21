@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/news_enrichment.schema.json",
+  "title": "Point-in-Time News Event Enrichment",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "enrichment_type",
+    "generated_at",
+    "source",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "enrichment_type": {"const": "news_event_enrichment"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "required": [
+        "synthetic",
+        "repository",
+        "commit",
+        "pipeline_run_id",
+        "methodology"
+      ],
+      "properties": {
+        "synthetic": {"const": false},
+        "repository": {"type": "string", "minLength": 1},
+        "commit": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+        "pipeline_run_id": {"type": "string", "minLength": 1},
+        "methodology": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "event_version",
+          "available_at",
+          "source_urls"
+        ],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "event_version": {"type": "integer", "minimum": 1},
+          "available_at": {"type": "string", "format": "date-time"},
+          "source_urls": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "uri"}
+          },
+          "published_at": {"type": "string", "format": "date-time"},
+          "novelty": {"type": "number", "minimum": 0, "maximum": 1},
+          "mappings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "entity",
+                "ticker",
+                "sector",
+                "effective_from",
+                "source_url"
+              ],
+              "properties": {
+                "entity": {"type": "string", "minLength": 1},
+                "ticker": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9.^-]{1,20}$"
+                },
+                "sector": {"type": "string", "minLength": 1},
+                "impact_multiplier": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 2
+                },
+                "effective_from": {"type": "string", "format": "date"},
+                "effective_to": {
+                  "oneOf": [
+                    {"type": "string", "format": "date"},
+                    {"type": "null"}
+                  ]
+                },
+                "source_url": {"type": "string", "format": "uri"}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "anyOf": [
+          {"required": ["published_at"]},
+          {"required": ["novelty"]},
+          {
+            "required": ["mappings"],
+            "properties": {"mappings": {"minItems": 1}}
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

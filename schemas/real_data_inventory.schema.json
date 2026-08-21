@@ -58,8 +58,13 @@
         "claims": {"type": "integer", "minimum": 0},
         "evidence_records": {"type": "integer", "minimum": 0},
         "reports": {"type": "integer", "minimum": 0},
+        "reports_with_top_level_novelty": {"type": "integer", "minimum": 0},
         "company_impacts": {"type": "integer", "minimum": 0},
         "industry_impacts": {"type": "integer", "minimum": 0},
+        "industry_impact_breakdown": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
         "first_seen_min": {"type": "string", "format": "date-time"},
         "last_seen_max": {"type": "string", "format": "date-time"}
       },

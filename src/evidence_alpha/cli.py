@@ -10,6 +10,7 @@ from .api import serve
 from .demo import run_demo
 from .integration import config_from_asof, run_integration
 from .news_adapter import NewsAdapter, write_news_export
+from .news_enrichment import apply_news_enrichment
 from .pipeline import config_from_cutoff, run_pipeline
 from .readiness import evaluate_release_readiness, write_readiness_report
 
@@ -51,6 +52,10 @@ def _parser() -> argparse.ArgumentParser:
     )
     news_export.add_argument("--limit", type=int, default=100)
     news_export.add_argument("--allow-synthetic", action="store_true")
+    news_export.add_argument(
+        "--enrichment",
+        help="versioned PIT enrichment JSON for published_at, novelty, and mappings",
+    )
     news_export.add_argument("--output-dir", required=True)
     integrate = sub.add_parser(
         "integrate",
@@ -69,6 +74,10 @@ def _parser() -> argparse.ArgumentParser:
     integrate.add_argument("--asof", required=True, help="timezone-aware ISO-8601 timestamp")
     integrate.add_argument("--news-limit", type=int, default=100)
     integrate.add_argument("--allow-synthetic-news", action="store_true")
+    integrate.add_argument(
+        "--news-enrichment",
+        help="versioned PIT enrichment JSON for published_at, novelty, and mappings",
+    )
     integrate.add_argument("--overlay-scale", type=float, default=0.02)
     integrate.add_argument("--max-overlay-per-name", type=float, default=0.01)
     integrate.add_argument("--overlay-turnover-cap", type=float, default=0.08)
@@ -150,6 +159,8 @@ def main(argv: list[str] | None = None) -> int:
         ).export(
             limit=args.limit, allow_synthetic=args.allow_synthetic
         )
+        if args.enrichment:
+            bundle = apply_news_enrichment(bundle, args.enrichment)
         paths = write_news_export(bundle, args.output_dir)
         print(
             json.dumps(
@@ -168,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
         report = run_integration(
             news_base_url=args.news_base_url,
             news_admin_token=os.getenv(args.news_token_env),
+            news_enrichment_path=args.news_enrichment,
             factor_root=args.factor_root,
             weights_path=args.weights,
             sectors_path=args.sectors,

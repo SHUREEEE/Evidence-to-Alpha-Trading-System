@@ -5,6 +5,11 @@ They are illustrative contracts, not release evidence. Placeholder paths and
 hashes cannot pass the runtime file-hash, provenance, freshness, or calendar
 cross-checks.
 
+`news_enrichment.example.json` is consumed upstream by `news-export
+--enrichment` or `integrate --news-enrichment`. Readiness reloads the path and
+SHA-256 recorded in the resulting news manifest. Example paths are rejected by
+the production-input gate.
+
 The CLI consumes each file separately:
 
     python -m evidence_alpha readiness

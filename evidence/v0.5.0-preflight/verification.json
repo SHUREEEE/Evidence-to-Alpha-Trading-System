@@ -1,26 +1,29 @@
 {
   "schema_version": "1.0",
   "candidate": "v0.5.0-preflight",
-  "generated_at": "2026-08-21T13:41:30.6026551+08:00",
-  "baseline_commit": "4aed601e37e9c8f35a8f18ebbd5de1dcea845b78",
+  "generated_at": "2026-08-21T14:41:58.6125399+08:00",
+  "baseline_commit": "3c8835df4094b0d900e5670df4702bb5e7796862",
   "branch": "codex/v0.5-real-readiness",
   "code_verification": {
-    "tests_passed": 33,
+    "tests_passed": 44,
     "tests_failed": 0,
     "warnings_as_errors": true,
     "compileall_passed": true,
     "git_diff_check_passed": true,
-    "json_files_parsed": 21,
-    "third_party_jsonschema_available": false
+    "json_files_parsed": 37,
+    "third_party_jsonschema_available": false,
+    "powershell_schema_validation_passed": true,
+    "news_enrichment_contract_tests": 10
   },
   "artifacts": {
     "real_data_inventory": {
       "file": "real_data_inventory.json",
-      "sha256": "8c1059d152da1b795215cd9a232a9a0b89e980878954b085e9641eaffc7a360b"
+      "sha256": "6b51ef73c08cc0396714d15527b9fa19cd9ba0872a6ef8136cdaeb94ecf9cd63",
+      "database_snapshot_sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a"
     },
     "readiness": {
       "file": "readiness.json",
-      "sha256": "44b53db70ae4a03a568aa1c97b14c564e580484740c68198d7013c375fa5fdcd",
+      "sha256": "d45e24c5d01eef7af6095d6636a2e028494953b77e7798ca0ef728f1ffd7e963",
       "policy": "evidence-alpha-real-readiness-v0.5",
       "decision": "BLOCKED",
       "hard_failure_count": 20,
@@ -31,7 +34,7 @@
     },
     "development_document": {
       "file": "docs/09_real_data_readiness_v0.5.md",
-      "sha256": "5c5c1b75f5507f82508b6dc1f7f58b4d5a0ddf3285b17e78b480402bffe15fad"
+      "sha256": "92ab73a2e248cab361f95729ae4e180e5ce6a3e65bafc19e5dfb190191a5cd45"
     }
   },
   "runtime": {

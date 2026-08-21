@@ -39,14 +39,23 @@ Export news versions without writing to the news service:
 ```powershell
 python -m evidence_alpha news-export `
   --news-base-url http://127.0.0.1:8765 `
+  --enrichment C:\path\to\news_enrichment.json `
   --output-dir artifacts/news
 ```
+
+`--enrichment` is optional. When supplied, it must identify exact event
+versions and carry non-synthetic repository, commit, pipeline-run, methodology,
+availability-time, and external-source provenance. Partial enrichment remains
+degraded; it cannot clear readiness until every visible event has no unresolved
+contract degradation. The contract is
+`schemas/news_enrichment.schema.json`.
 
 Run the complete integration with real factor artifacts:
 
 ```powershell
 python -m evidence_alpha integrate `
   --news-base-url http://127.0.0.1:8765 `
+  --news-enrichment C:\path\to\news_enrichment.json `
   --factor-root C:\path\to\multi-factor-alpha-platform `
   --weights path\to\v3_weights.parquet `
   --sectors results\pillar5_artifacts\v3_sector_map.csv `
@@ -142,10 +151,13 @@ The v0.4 synthetic integration has no integrity failures, but its five-day prima
 
 ## Real-data readiness v0.5
 
-v0.5 adds compatibility with the maintained News_Claws API and a separate
-release-readiness command. It verifies actual file hashes and provenance rather
-than accepting a caller-provided real label. It requires:
+v0.5 adds compatibility with the maintained News_Claws API, an exact-version
+PIT news-enrichment contract, and a separate release-readiness command. It
+verifies actual file hashes and provenance rather than accepting a
+caller-provided real label. It requires:
 
+- non-synthetic external news provenance with no unresolved novelty,
+  publication-time, or investable-mapping degradation;
 - 30 usable primary-window events, 10 OOS events, and at least three rolling folds;
 - passing baseline, placebo, one-day-delay, and doubled-cost gates;
 - PIT factor weights and corporate-action-safe prices through event T+1;
@@ -163,11 +175,15 @@ Run the fail-closed policy after producing one real integration:
       --pb-launch-bundle path/to/pb_launch_bundle.json
       --paper-manifest path/to/paper/manifest.json
 
-The current real-data inventory contains 245 non-demo News_Claws events, but
-the latest 100-event API export has no direct ticker mappings and lacks novelty
-for every event. Available factor and price evidence ends on 2026-07-17, before
-the 2026-08-20 news observations. PB evidence and continuous Paper sessions are
-absent. The sealed readiness decision is BLOCKED.
+The latest read-only database snapshot contains 254 non-demo News_Claws events,
+260 reports, zero company impacts, and no top-level novelty field in any
+report. The previously sealed 100-event API export belongs to an earlier
+snapshot; it has no direct ticker mappings and lacks novelty for every event.
+The enrichment mechanism is implemented and covered by the 44-test suite, but
+no production enrichment artifact has been supplied. Available factor and
+price evidence ends on 2026-07-17, before the 2026-08-20 news observations. PB
+evidence and continuous Paper sessions are absent. The sealed readiness
+decision remains BLOCKED.
 
 See docs/09_real_data_readiness_v0.5.md and
 evidence/v0.5.0-preflight/real_data_inventory.json.

@@ -12,9 +12,12 @@ grants Live trading, broker execution, credentials, or real-money authority.
 ## Scope
 
 v0.5 connects the maintained News_Claws API shape to the existing
-Evidence-to-Alpha integration and adds immutable checks for:
+Evidence-to-Alpha integration, supports a separately versioned PIT news
+enrichment artifact, and adds immutable checks for:
 
 - non-synthetic news with complete external evidence and no contract degradation;
+- exact event-version enrichment with a matching SHA-256, immutable source
+  commit, pipeline run, methodology, and availability timestamp;
 - at least 30 usable primary-window events and 10 chronological OOS events;
 - at least three rolling folds plus placebo, delay, baseline, and doubled-cost gates;
 - point-in-time factor weights with a matching file hash and production provenance;
@@ -31,31 +34,37 @@ sessions.
 
 ## Current Real Data Inventory
 
-The isolated News_Claws database has SHA-256
-F16FEB1FE5EDBB3758D68E40B4F54D2B7265392673F948CE36D44D72570D5163.
-It was inspected through a separate copy; the source database was not modified.
+The latest isolated News_Claws database snapshot has SHA-256
+D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A.
+The source and isolated copy hashes were compared after copying. The source
+database was not modified.
 
 | Item | Current fact |
 |---|---:|
-| Non-demo event clusters | 245 |
-| Articles | 250 |
-| Claims | 248 |
-| Evidence records | 254 |
-| Reports | 248 |
+| Non-demo event clusters | 254 |
+| Articles | 260 |
+| Claims | 260 |
+| Evidence records | 267 |
+| Reports | 260 |
+| Reports with top-level novelty | 0 |
 | Company impacts | 0 |
-| Industry impacts | 45 |
-| Exported latest event versions | 100 |
-| Exported evidence records | 104 |
-| Direct ticker mappings | 0 |
-| Industry-only mapped events | 15 |
-| Events with no investable mapping | 85 |
-| Events missing API novelty | 100 |
+| Industry impacts | 48 |
+| Banking/financial-services impacts | 23 |
+| Pharma/life-sciences impacts | 15 |
 
-The current API returns no cursor and accepts at most 200 events per request.
-The sealed export intentionally records the latest 100 versions and does not
-claim to be a full database export. Every exported event is non-demo, but every
-event has at least one contract degradation. Industry-only events are not
+The previously sealed 100-event API export was produced from the earlier
+F16FEB1F... snapshot. It is retained as historical preflight evidence and is
+explicitly marked as not matching the current database snapshot. That export
+contains 104 evidence records, zero direct ticker mappings, 15 industry-only
+mappings, 85 unmapped events, and missing novelty for all 100 events. It does
+not claim to be a current full-database export. Industry-only events are not
 equivalent to verified company/ticker mappings.
+
+The new enrichment path does not invent these missing values. It accepts only
+an external production artifact that names exact event versions, records when
+each value became available, rejects local/example URLs and placeholder
+tickers, enforces effective-dated mappings, and moves event `observed_at`
+forward to prevent lookahead. Partial enrichment remains degraded.
 
 The sealed machine-readable inventory is stored at
 evidence/v0.5.0-preflight/real_data_inventory.json. It contains only logical
@@ -78,8 +87,11 @@ coverage, corporate-action, or Paper freshness gates.
 
 ## Readiness Inputs
 
-The command accepts the integration artifact directory plus six independent
-evidence files:
+The integration may carry one optional upstream news-enrichment artifact. Its
+hash and production provenance are reloaded and cross-checked by readiness;
+all unresolved event references must be empty. The readiness command also
+accepts the integration artifact directory plus six independent evidence
+files:
 
 1. Factor attestation with the exact factor-file SHA-256, coverage dates,
    immutable source commit and pipeline run, and PIT universe assertions.
@@ -92,13 +104,27 @@ evidence files:
 5. PB launch bundle from the same integration as-of and the same feed hash.
 6. Continuous Paper manifest referencing at least 20 hashed session artifacts.
 
-Schemas are under schemas. Non-authoritative examples are under
-examples/readiness. Examples document shape only; placeholder values cannot
-pass runtime hash and provenance checks.
+Schemas are under schemas, including
+`schemas/news_enrichment.schema.json`. Non-authoritative examples are under
+`examples/readiness`. Examples document shape only; example paths and
+placeholder values cannot pass runtime hash and provenance checks.
 
 ## Operator Command
 
-Run the policy only after producing one causally valid real integration:
+First apply a production enrichment artifact during the read-only export or
+integration:
+
+    python -m evidence_alpha news-export
+      --news-base-url http://127.0.0.1:8765
+      --enrichment path/to/news_enrichment.json
+      --output-dir artifacts/news-real
+
+    python -m evidence_alpha integrate
+      --news-base-url http://127.0.0.1:8765
+      --news-enrichment path/to/news_enrichment.json
+      ...
+
+Then run the policy only after producing one causally valid real integration:
 
     python -m evidence_alpha readiness
       --artifact-dir artifacts/integrated-real
@@ -129,11 +155,13 @@ The read-only artifact API exposes the sealed result at:
 4. ORCHESTRATE: fixed the minimum evidence set and kept external projects
    read-only.
 5. DEVELOP: added current News_Claws compatibility, token-by-environment,
-   contract degradation tracking, readiness CLI/API, attestations, and Paper
-   evidence contracts.
-6. VERIFY: added positive and negative readiness tests, current API tests,
-   caller-label downgrade tests, placeholder mapping tests, and unmapped-event
-   tests. Full-suite results are recorded in the v0.5 run log.
+   contract degradation tracking, strict PIT news enrichment, readiness
+   CLI/API, attestations, and Paper evidence contracts.
+6. VERIFY: 44 tests pass with warnings as errors. Coverage includes exact
+   event references, duplicate and unknown references, strict integer versions,
+   placeholder ticker and local URL rejection, effective dates, availability
+   chronology, partial-degradation retention, CLI wiring, signal generation,
+   and enrichment-file tamper detection.
 7. SEAL: the real inventory and current BLOCKED readiness report are retained
    as preflight evidence. They do not become a production release.
 8. RELEASE: merge, tag, and 8080 replacement remain conditional on every hard
@@ -141,8 +169,9 @@ The read-only artifact API exposes the sealed result at:
 
 ## Required Work Before Release
 
-1. Add stable novelty to the maintained News_Claws API and supply verified
-   company-to-ticker identifiers or a versioned, point-in-time mapping source.
+1. Produce a real, versioned enrichment artifact containing stable novelty and
+   verified point-in-time company-to-ticker mappings from an auditable
+   production pipeline. The implemented mechanism is not evidence by itself.
 2. Export enough causally distinct events to produce 30 usable primary-window
    observations and 10 chronological OOS observations.
 3. Generate PIT factor weights and corporate-action-safe prices through every

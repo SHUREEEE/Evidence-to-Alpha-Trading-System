@@ -2,9 +2,9 @@
 
 - Project: Evidence-to-Alpha Trading System
 - Release candidate: v0.5.0 real-data readiness preflight
-- Current phase: 06 Verify / 07 Seal - fail-closed readiness evidence
-- Task state: v0.5 readiness implementation and real-data inventory complete; external real-data, PB, and continuous Paper gates blocked
-- Owner: Maker readiness implementation complete; independent production inputs and acceptance pending
+- Current phase: 06 Verify / 07 Seal - PIT news enrichment verified; production evidence still blocked
+- Task state: v0.5 readiness and PIT news-enrichment mechanisms complete; production enrichment, T+1 market data, PB, and continuous Paper gates blocked
+- Owner: Maker contract and verification implementation complete; independent production inputs and acceptance pending
 - Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, readiness attestations, PB/Paper cross-checks, standard audit, attribution artifacts, read-only API
 - Non-scope: news mutation, broker connectivity, live credentials, real-money execution, cloud account provisioning, economic-performance claims
 - Decision: extend the thin integration service around the existing factor platform; do not fork a full trading engine
@@ -15,14 +15,19 @@
 ## Current release facts
 
 - Verified fact: v0.5 reads the maintained News_Claws API shape with an optional token supplied by environment-variable name.
-- Verified fact: the isolated database snapshot contains 245 non-demo events, 250 articles, 248 claims, 254 evidence records, 45 industry impacts, and zero company impacts.
-- Verified fact: the latest 100-event export is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
+- Verified fact: the latest source and isolated database snapshot hashes both equal D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A; the source database was not modified.
+- Verified fact: the latest isolated database snapshot contains 254 non-demo events, 260 articles, 260 claims, 267 evidence records, 260 reports, 48 industry impacts, and zero company impacts.
+- Verified fact: zero of the 260 reports contains a top-level novelty field.
+- Verified fact: the retained 100-event export belongs to the earlier F16FEB1F... snapshot; it is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
+- Verified fact: v0.5 can apply a separately produced, exact-event-version PIT enrichment artifact without modifying News_Claws.
+- Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.
+- Verified fact: partial enrichment retains unresolved degradations and __UNMAPPED__; corrected observations move forward to enrichment availability time.
 - Verified fact: a caller-provided real label is downgraded when news mappings are placeholders or the API contract is degraded.
 - Verified fact: readiness verifies hashes and provenance for factor, price, PB, and every Paper session artifact.
 - Verified fact: malformed readiness dates and numeric fields fail the input-contract gate instead of raising an unhandled exception.
 - Verified fact: the current readiness report is BLOCKED with zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
 - Decision: v0.5 is a preflight branch only. Do not merge, tag, or replace the v0.4 service until every readiness hard gate passes in one real-data run.
-- Verified fact: the v0.5 candidate passes 33 automated tests with all warnings promoted to errors.
+- Verified fact: the v0.5 candidate passes 44 automated tests with all warnings promoted to errors.
 - Verified fact: integrated run `INT-3294801BE2C27699` is `READY_FOR_PAPER_RESEARCH`, passes 13/13 integration hard gates, and has no standard-audit hard failures.
 - Verified fact: the multi-factor V4 production loader and all three external backtests pass in the same integrate run.
 - Verified fact: `event_study.csv` has eight NVDA/TSM rows across 1/3/5/20-day windows; the five-day primary window has no usable events.
@@ -40,7 +45,7 @@
 - Baseline fact: the v0.2.1 suite passed 15 tests after adding sparse-panel and stale-data causality regressions.
 - Verified fact: Paper comparison and fill dates are anchored to integration as-of; no post-as-of price means `BLOCKED`, zero orders, and zero fills.
 - Verified fact: V3 ends on 2024-12-31; V6.5 weights and NVDA/TSM/SPY TDX prices end on 2026-07-17.
-- Verified fact: the current news event is synthetic with an August 2026 as-of, so no causally valid real integration can run.
+- Verified fact: the deployed 8765 sample is synthetic, while the isolated database has real events but still lacks production novelty and investable company mappings; no causally valid real integration can yet clear the contract.
 - Verified fact: V6.5 documents raw-close corporate-action, survivorship, and borrow-proxy limitations.
 - Decision: continuous Paper and live launch remain `BLOCKED` until the real-data preflight hard failures are cleared.
 - Baseline fact: the sealed v0.2.0 integration passed 13 automated tests and its original compile checks.

@@ -1,31 +1,41 @@
 {
   "schema_version": "1.0",
   "inventory_id": "REAL-DATA-INVENTORY-20260821-V0.5",
-  "generated_at": "2026-08-21T13:16:00.0779879+08:00",
+  "generated_at": "2026-08-21T14:25:00.7386636+08:00",
   "decision": "BLOCKED",
   "database_snapshot": {
-    "logical_path": "artifacts/news-real-preflight-v0.5/analysis.db",
-    "sha256": "f16feb1fe5edbb3758d68e40b4f54d2b7265392673f948ce36d44d72570d5163",
+    "logical_path": "artifacts/news-real-preflight-v0.5/analysis-v2.db",
+    "sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a",
     "isolated_copy": true,
     "source_database_modified": false,
     "preview_service_stopped_after_export": true
   },
   "news_database": {
-    "events_total": 245,
-    "events_non_demo": 245,
+    "events_total": 254,
+    "events_non_demo": 254,
     "events_demo": 0,
-    "articles": 250,
-    "claims": 248,
-    "evidence_records": 254,
-    "reports": 248,
+    "articles": 260,
+    "claims": 260,
+    "evidence_records": 267,
+    "reports": 260,
+    "reports_with_top_level_novelty": 0,
     "company_impacts": 0,
-    "industry_impacts": 45,
+    "industry_impacts": 48,
+    "industry_impact_breakdown": {
+      "banking_and_financial_services": 23,
+      "pharma_and_life_sciences": 15,
+      "power_generation_transmission_and_storage": 5,
+      "wind_and_clean_energy_equipment": 4,
+      "software_and_cloud_services": 1
+    },
     "first_seen_min": "2017-04-08T00:00:00+00:00",
-    "last_seen_max": "2026-08-20T09:04:40.561910+00:00"
+    "last_seen_max": "2026-08-20T09:05:37.255227+00:00"
   },
   "news_export": {
     "api_dialect": "news-claws-current",
     "read_only": true,
+    "source_snapshot_sha256": "f16feb1fe5edbb3758d68e40b4f54d2b7265392673f948ce36d44d72570d5163",
+    "matches_current_database_snapshot": false,
     "requested_limit": 100,
     "api_cursor_available": false,
     "api_max_limit": 200,
