@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "audit_id": "MARKET-INPUT-AUDIT-20260821T164826+0800",
+  "generated_at": "2026-08-21T16:48:26.4828300+08:00",
+  "task_state": "blocked",
+  "authorization_envelope": {
+    "goal": "Find non-synthetic factor weights and corporate-action-safe prices through every real news event T+1.",
+    "scope": [
+      "Read-only inspection of local multi-factor-alpha-platform artifacts",
+      "Read-only inspection of local TDX US day files",
+      "Read-only inspection of GitHub releases, Actions runs, and artifact metadata",
+      "Fail-closed validation changes inside Evidence-to-Alpha Trading System"
+    ],
+    "non_scope": [
+      "Modification of multi-factor-alpha-platform or TDX source files",
+      "Market-data download or database refresh",
+      "Broker, credential, real-money, merge, or deployment actions",
+      "Fabricated factor, price, corporate-action, PB, novelty, or Paper evidence"
+    ],
+    "acceptance": [
+      "Artifact contents independently reproduce attested coverage dates",
+      "Factor weights cover every real event through required T+1 and have PIT universe provenance",
+      "Prices expose adjusted close or total-return semantics through required T+1 with split, dividend, special-dividend, and delisting evidence"
+    ],
+    "stop_conditions": [
+      "Latest real event starts after all available factor and price coverage",
+      "Available recent prices are raw close and explicitly not corporate-action safe",
+      "No authorized data refresh or licensed adjusted-price source is present"
+    ]
+  },
+  "news_events": {
+    "artifact": "artifacts/news-real-preflight-v0.5/export-v3-200-enriched/events.json",
+    "sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5",
+    "event_count": 200,
+    "published_date_start": "2026-08-06",
+    "published_date_end": "2026-08-20",
+    "published_distinct_dates": 11,
+    "events_after_latest_tdx_date": 200
+  },
+  "factor_weights": {
+    "artifact": "multi-factor-alpha-platform/results/tdx_us_v65_lowvol/weights.parquet",
+    "sha256": "73bbba4044a518cad619661ee926686f06e826db63409268ba1a4ad1574281a3",
+    "coverage_start": "2022-09-26",
+    "coverage_end": "2026-07-17",
+    "row_count": 2114370,
+    "date_count": 955,
+    "ticker_count": 2214,
+    "nonzero_weight_count": 2114370,
+    "value_field": "weight",
+    "git_tracked": false,
+    "point_in_time_universe_attested": false,
+    "pipeline_run_id_present": false
+  },
+  "factor_manifest": {
+    "artifact": "multi-factor-alpha-platform/results/tdx_us_v65_lowvol/manifest.json",
+    "sha256": "2bbc4b692dcef59c901f2b85d6a8d09ef612a5b867ae771fd552742a2af8ab15",
+    "source_commit": "b3230157f36e8f09d08b0f09a2180f2a88cb1ddb",
+    "git_tracked": true,
+    "price_adjustment": "raw_close_with_abs_returns_over_35pct_masked",
+    "declared_limitations": [
+      "Dividends and smaller corporate actions remain unadjusted",
+      "Universe is current-constituent based and retains survivorship bias",
+      "Borrow cost is a proxy and security-level historical availability is absent"
+    ]
+  },
+  "adjusted_prices": {
+    "artifact": "multi-factor-alpha-platform/data/processed/prices.parquet",
+    "sha256": "7e2250a1a65239630a5ea96d6501ca746424b0f207b57fc7f4e3e0c69b8bc32c",
+    "coverage_start": "2014-01-02",
+    "coverage_end": "2024-12-31",
+    "row_count": 1371595,
+    "date_count": 2768,
+    "ticker_count": 516,
+    "value_field": "adj_close",
+    "git_tracked": false,
+    "delistings_attested": false
+  },
+  "tdx_spot_checks": [
+    {
+      "symbol": "SPY",
+      "artifact": "new_tdx/vipdoc/ds/lday/74#SPY.day",
+      "sha256": "2feeab7edcc00a0e18c00e3bd4cc1d666446e4efa0c87bb45745aa8510f69961",
+      "latest_date": "2026-07-17",
+      "price_semantics": "raw_close"
+    },
+    {
+      "symbol": "NVDA",
+      "artifact": "new_tdx/vipdoc/ds/lday/74#NVDA.day",
+      "sha256": "b5c8d4252e011b31d707f0933186aec4742b2d0eca0edc08c9e208bad728fd5a",
+      "latest_date": "2026-07-17",
+      "price_semantics": "raw_close"
+    },
+    {
+      "symbol": "TSM",
+      "artifact": "new_tdx/vipdoc/ds/lday/74#TSM.day",
+      "sha256": "ae261e190e96f44a6705196965522d2c47cd30684d4b8d109a474d2a9ef60d4e",
+      "latest_date": "2026-07-17",
+      "price_semantics": "raw_close"
+    }
+  ],
+  "github_inventory": {
+    "multi_factor_releases": 0,
+    "latest_research_actions_run": 31964359490,
+    "latest_research_actions_artifacts": 0,
+    "pages_artifact_usable_for_market_inputs": false,
+    "secondary_private_repository_branches": 0
+  },
+  "verified_facts": [
+    "All 200 current real-news events start after the latest available V6.5 weights and TDX prices.",
+    "The only local price panel with an explicit adj_close field ends on 2024-12-31.",
+    "The newer TDX feed is raw close and cannot satisfy the corporate-action-safe price contract.",
+    "GitHub contains no release or Actions artifact that closes the market-input gap.",
+    "Readiness now recomputes artifact coverage and value-field semantics from CSV or Parquet contents instead of trusting attestation dates alone."
+  ],
+  "unknowns": [
+    "No authorized source of PIT universe membership through August 2026 is present.",
+    "No licensed or otherwise attested total-return price dataset through August 2026 is present.",
+    "No pipeline run manifest binds the untracked V6.5 weight artifact hash to an immutable production run."
+  ],
+  "decision": {
+    "status": "BLOCKED",
+    "reason": "Zero real events can have causally valid factor and corporate-action-safe T+1 coverage from the inspected inputs.",
+    "required_next_inputs": [
+      "PIT factor weights and universe membership through at least 2026-08-21",
+      "Corporate-action-safe adjusted prices through at least every selected event T+1",
+      "Immutable hashes, production provenance, and unresolved-exception attestations for both artifacts"
+    ]
+  }
+}
