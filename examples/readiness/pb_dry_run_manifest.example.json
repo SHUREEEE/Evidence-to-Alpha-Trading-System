@@ -1,0 +1,9 @@
+{
+  "workflow": "v4_pb_live_dry_run",
+  "status": "PASS",
+  "asof": "2026-08-20",
+  "borrow_feed": "replace/with/real/borrow.csv",
+  "borrow_feed_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "pipeline_exit_code": 0,
+  "synthetic_borrow_used": false
+}

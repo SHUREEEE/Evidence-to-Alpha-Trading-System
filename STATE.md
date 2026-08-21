@@ -1,20 +1,28 @@
 # Project State
 
 - Project: Evidence-to-Alpha Trading System
-- Release candidate: v0.4.0
-- Current phase: 09 Deploy / 10 Seal - integrated three-system validation
-- Task state: v0.4 integration, independent validation, document QA, and local read-only deployment complete; real-data continuous Paper blocked
-- Owner: Maker implementation complete; automated integrated evidence sealed; independent production acceptance pending
-- Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, standard audit, attribution artifacts, read-only API
+- Release candidate: v0.5.0 real-data readiness preflight
+- Current phase: 06 Verify / 07 Seal - fail-closed readiness evidence
+- Task state: v0.5 readiness implementation and real-data inventory complete; external real-data, PB, and continuous Paper gates blocked
+- Owner: Maker readiness implementation complete; independent production inputs and acceptance pending
+- Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, readiness attestations, PB/Paper cross-checks, standard audit, attribution artifacts, read-only API
 - Non-scope: news mutation, broker connectivity, live credentials, real-money execution, cloud account provisioning, economic-performance claims
 - Decision: extend the thin integration service around the existing factor platform; do not fork a full trading engine
-- Evidence: `evidence/v0.2.0/`, `evidence/v0.2.1/`, `evidence/v0.3.0/`, and `evidence/v0.4.0/`
+- Evidence: `evidence/v0.2.0/`, `evidence/v0.2.1/`, `evidence/v0.3.0/`, `evidence/v0.4.0/`, and `evidence/v0.5.0-preflight/`
 - Private remote target: `SHUREEEE/Evidence-to-Alpha-Trading-System`
 - Next gate: non-synthetic news plus factor weights and corporate-action-safe prices through event T+1, with enough events to pass the implemented rolling OOS and robustness gates; then real PB borrow, continuous Paper observation, independent risk validation, broker security design, and explicit live-release authorization
 
 ## Current release facts
 
-- Verified fact: 22 automated tests pass with ResourceWarning promoted to an error.
+- Verified fact: v0.5 reads the maintained News_Claws API shape with an optional token supplied by environment-variable name.
+- Verified fact: the isolated database snapshot contains 245 non-demo events, 250 articles, 248 claims, 254 evidence records, 45 industry impacts, and zero company impacts.
+- Verified fact: the latest 100-event export is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
+- Verified fact: a caller-provided real label is downgraded when news mappings are placeholders or the API contract is degraded.
+- Verified fact: readiness verifies hashes and provenance for factor, price, PB, and every Paper session artifact.
+- Verified fact: malformed readiness dates and numeric fields fail the input-contract gate instead of raising an unhandled exception.
+- Verified fact: the current readiness report is BLOCKED with zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
+- Decision: v0.5 is a preflight branch only. Do not merge, tag, or replace the v0.4 service until every readiness hard gate passes in one real-data run.
+- Verified fact: the v0.5 candidate passes 33 automated tests with all warnings promoted to errors.
 - Verified fact: integrated run `INT-3294801BE2C27699` is `READY_FOR_PAPER_RESEARCH`, passes 13/13 integration hard gates, and has no standard-audit hard failures.
 - Verified fact: the multi-factor V4 production loader and all three external backtests pass in the same integrate run.
 - Verified fact: `event_study.csv` has eight NVDA/TSM rows across 1/3/5/20-day windows; the five-day primary window has no usable events.

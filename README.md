@@ -8,7 +8,10 @@ Evidence-to-Alpha is the integration and governance layer between:
 
 It exports immutable news-event versions, creates traceable event signals, overlays bounded deltas on factor weights before V4 controls, runs the factor platform's production loader and T+1 backtests, records paper orders with complete evidence lineage, and independently validates the integrated path with chronological event studies and robustness scenarios.
 
-The current release is a research and Paper integration MVP. It deliberately has no broker connection, live credentials, real-order write path, or claim of economic efficacy.
+The deployed v0.4 release is a research and Paper integration MVP. The v0.5
+branch adds a fail-closed real-data readiness policy but is not yet eligible to
+replace v0.4. Neither version has a broker connection, live credentials,
+real-order write path, or claim of economic efficacy.
 
 ## Quick start
 
@@ -136,6 +139,38 @@ v0.4 moves the independent validator into the real `integrate` orchestration pat
 - serves both event-study and independent-validation artifacts through the read-only API.
 
 The v0.4 synthetic integration has no integrity failures, but its five-day primary window has no usable events and the doubled-cost result does not exceed the factor baseline. Its correct research result is therefore `INCONCLUSIVE`; live launch remains separately `BLOCKED`.
+
+## Real-data readiness v0.5
+
+v0.5 adds compatibility with the maintained News_Claws API and a separate
+release-readiness command. It verifies actual file hashes and provenance rather
+than accepting a caller-provided real label. It requires:
+
+- 30 usable primary-window events, 10 OOS events, and at least three rolling folds;
+- passing baseline, placebo, one-day-delay, and doubled-cost gates;
+- PIT factor weights and corporate-action-safe prices through event T+1;
+- a real PB borrow feed, passing dry run, and passing launch bundle;
+- 20 gap-free hashed Paper sessions with freshness and reconciliation.
+
+Run the fail-closed policy after producing one real integration:
+
+    python -m evidence_alpha readiness
+      --artifact-dir artifacts/integrated-real
+      --factor-attestation path/to/factor_attestation.json
+      --price-attestation path/to/price_attestation.json
+      --pb-validation path/to/pb_validation.json
+      --pb-dry-run-manifest path/to/pb_dry_run_manifest.json
+      --pb-launch-bundle path/to/pb_launch_bundle.json
+      --paper-manifest path/to/paper/manifest.json
+
+The current real-data inventory contains 245 non-demo News_Claws events, but
+the latest 100-event API export has no direct ticker mappings and lacks novelty
+for every event. Available factor and price evidence ends on 2026-07-17, before
+the 2026-08-20 news observations. PB evidence and continuous Paper sessions are
+absent. The sealed readiness decision is BLOCKED.
+
+See docs/09_real_data_readiness_v0.5.md and
+artifacts/news-real-preflight-v0.5/real_data_inventory_v0.5.json.
 
 ## Inputs
 

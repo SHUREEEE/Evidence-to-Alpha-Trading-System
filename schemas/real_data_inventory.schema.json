@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/real_data_inventory.schema.json",
+  "title": "Evidence-to-Alpha Real Data Inventory",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "inventory_id",
+    "generated_at",
+    "decision",
+    "database_snapshot",
+    "news_database",
+    "news_export",
+    "factor_and_prices",
+    "pb_and_paper",
+    "gates",
+    "hard_failures",
+    "required_next_inputs",
+    "authorization"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "inventory_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "decision": {"enum": ["BLOCKED", "READY_FOR_READINESS_EVALUATION"]},
+    "database_snapshot": {
+      "type": "object",
+      "required": ["logical_path", "sha256", "isolated_copy", "source_database_modified"],
+      "properties": {
+        "logical_path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "isolated_copy": {"const": true},
+        "source_database_modified": {"const": false},
+        "preview_service_stopped_after_export": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "news_database": {
+      "type": "object",
+      "required": [
+        "events_total",
+        "events_non_demo",
+        "events_demo",
+        "articles",
+        "claims",
+        "evidence_records",
+        "reports",
+        "company_impacts",
+        "industry_impacts",
+        "first_seen_min",
+        "last_seen_max"
+      ],
+      "properties": {
+        "events_total": {"type": "integer", "minimum": 0},
+        "events_non_demo": {"type": "integer", "minimum": 0},
+        "events_demo": {"type": "integer", "minimum": 0},
+        "articles": {"type": "integer", "minimum": 0},
+        "claims": {"type": "integer", "minimum": 0},
+        "evidence_records": {"type": "integer", "minimum": 0},
+        "reports": {"type": "integer", "minimum": 0},
+        "company_impacts": {"type": "integer", "minimum": 0},
+        "industry_impacts": {"type": "integer", "minimum": 0},
+        "first_seen_min": {"type": "string", "format": "date-time"},
+        "last_seen_max": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "news_export": {"type": "object"},
+    "factor_and_prices": {"type": "object"},
+    "pb_and_paper": {"type": "object"},
+    "gates": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "boolean"}
+    },
+    "hard_failures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "required_next_inputs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "authorization": {
+      "type": "object",
+      "required": ["live_trading", "broker_execution"],
+      "properties": {
+        "live_trading": {"const": "NOT_GRANTED"},
+        "broker_execution": {"const": "BLOCKED"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

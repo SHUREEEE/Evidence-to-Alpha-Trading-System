@@ -92,6 +92,7 @@ def run_integration(
     weights_path: str | Path | None = None,
     sectors_path: str | Path | None = None,
     prices_path: str | Path | None = None,
+    news_admin_token: str | None = None,
     news_limit: int = 100,
     allow_synthetic_news: bool = False,
     write_parquet_staging: bool = True,
@@ -102,7 +103,7 @@ def run_integration(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
 
-    news = NewsAdapter(news_base_url).export(
+    news = NewsAdapter(news_base_url, admin_token=news_admin_token).export(
         limit=news_limit, allow_synthetic=allow_synthetic_news
     )
     news_paths = write_news_export(news, output / "news_export")
@@ -631,6 +632,10 @@ def _effective_data_classification(
 ) -> str:
     if bool(news.manifest.get('synthetic')):
         return 'synthetic'
+    if news.manifest.get('placeholder_mapping_refs') or news.manifest.get(
+        'contract_degradations_by_event_version'
+    ):
+        return 'unknown'
     if config.data_classification == 'real':
         return 'real'
     if config.data_classification == 'synthetic':

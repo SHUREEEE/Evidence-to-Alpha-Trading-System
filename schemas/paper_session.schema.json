@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/paper_session.schema.json",
+  "title": "Continuous Paper Session",
+  "type": "object",
+  "required": [
+    "session_date",
+    "mode",
+    "status",
+    "run_id",
+    "reconciliation",
+    "data_freshness",
+    "exceptions"
+  ],
+  "properties": {
+    "session_date": {"type": "string", "format": "date"},
+    "mode": {"const": "PAPER"},
+    "status": {"const": "PASS"},
+    "run_id": {"type": "string", "minLength": 1},
+    "reconciliation": {
+      "type": "object",
+      "required": ["closed_to_cent", "unreconciled_items"],
+      "properties": {
+        "closed_to_cent": {"const": true},
+        "unreconciled_items": {"const": 0}
+      },
+      "additionalProperties": true
+    },
+    "data_freshness": {
+      "type": "object",
+      "required": ["passed"],
+      "properties": {"passed": {"const": true}},
+      "additionalProperties": true
+    },
+    "exceptions": {"type": "array", "maxItems": 0}
+  },
+  "additionalProperties": true
+}

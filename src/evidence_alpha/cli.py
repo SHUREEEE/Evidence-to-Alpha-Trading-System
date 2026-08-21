@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import json
+import os
 import sys
 
 from .api import serve
@@ -10,6 +11,7 @@ from .demo import run_demo
 from .integration import config_from_asof, run_integration
 from .news_adapter import NewsAdapter, write_news_export
 from .pipeline import config_from_cutoff, run_pipeline
+from .readiness import evaluate_release_readiness, write_readiness_report
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -42,6 +44,11 @@ def _parser() -> argparse.ArgumentParser:
         "news-export", help="export immutable event versions from the read-only News Claws API"
     )
     news_export.add_argument("--news-base-url", default="http://127.0.0.1:8765")
+    news_export.add_argument(
+        "--news-token-env",
+        default="NEWS_CLAWS_ADMIN_TOKEN",
+        help="environment variable containing an optional read-only API token",
+    )
     news_export.add_argument("--limit", type=int, default=100)
     news_export.add_argument("--allow-synthetic", action="store_true")
     news_export.add_argument("--output-dir", required=True)
@@ -50,6 +57,11 @@ def _parser() -> argparse.ArgumentParser:
         help="fuse News Claws event alpha into multi-factor weights before V4 controls",
     )
     integrate.add_argument("--news-base-url", default="http://127.0.0.1:8765")
+    integrate.add_argument(
+        "--news-token-env",
+        default="NEWS_CLAWS_ADMIN_TOKEN",
+        help="environment variable containing an optional read-only API token",
+    )
     integrate.add_argument("--factor-root", required=True)
     integrate.add_argument("--weights", help="override V3 weights path, relative to factor root")
     integrate.add_argument("--sectors", help="override V3 sector-map path, relative to factor root")
@@ -69,6 +81,18 @@ def _parser() -> argparse.ArgumentParser:
     integrate.add_argument("--output-dir", required=True)
     verify = sub.add_parser("verify", help="verify an existing artifact directory")
     verify.add_argument("--artifact-dir", default="artifacts/demo")
+    readiness = sub.add_parser(
+        "readiness",
+        help="evaluate fail-closed real-data, PB, and continuous Paper release gates",
+    )
+    readiness.add_argument("--artifact-dir", required=True)
+    readiness.add_argument("--factor-attestation")
+    readiness.add_argument("--price-attestation")
+    readiness.add_argument("--pb-validation")
+    readiness.add_argument("--pb-dry-run-manifest")
+    readiness.add_argument("--pb-launch-bundle")
+    readiness.add_argument("--paper-manifest")
+    readiness.add_argument("--output")
     service = sub.add_parser("serve", help="serve artifacts through a read-only HTTP API")
     service.add_argument("--artifact-dir", default="artifacts/demo")
     service.add_argument("--host", default="127.0.0.1")
@@ -121,7 +145,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"run_id": report["run_id"], "decision": report["decision"]}, indent=2))
         return 0
     if args.command == "news-export":
-        bundle = NewsAdapter(args.news_base_url).export(
+        bundle = NewsAdapter(
+            args.news_base_url, admin_token=os.getenv(args.news_token_env)
+        ).export(
             limit=args.limit, allow_synthetic=args.allow_synthetic
         )
         paths = write_news_export(bundle, args.output_dir)
@@ -141,6 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "integrate":
         report = run_integration(
             news_base_url=args.news_base_url,
+            news_admin_token=os.getenv(args.news_token_env),
             factor_root=args.factor_root,
             weights_path=args.weights,
             sectors_path=args.sectors,
@@ -190,6 +217,30 @@ def main(argv: list[str] | None = None) -> int:
         hard_failures = [gate for gate in audit.get("gates", []) if gate.get("severity") == "hard" and not gate.get("passed")]
         print(json.dumps({"decision": audit.get("decision"), "hard_failures": hard_failures}, indent=2))
         return 1 if hard_failures else 0
+    if args.command == "readiness":
+        report = evaluate_release_readiness(
+            artifact_dir=args.artifact_dir,
+            factor_attestation_path=args.factor_attestation,
+            price_attestation_path=args.price_attestation,
+            pb_validation_path=args.pb_validation,
+            pb_dry_run_manifest_path=args.pb_dry_run_manifest,
+            pb_launch_bundle_path=args.pb_launch_bundle,
+            paper_manifest_path=args.paper_manifest,
+        )
+        output = Path(args.output) if args.output else Path(args.artifact_dir) / "readiness.json"
+        write_readiness_report(report, output)
+        print(
+            json.dumps(
+                {
+                    "decision": report["decision"],
+                    "hard_failures": report["hard_failures"],
+                    "output": str(output),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1 if report["hard_failures"] else 0
     if args.command == "serve":
         artifact_dir = Path(args.artifact_dir)
         if args.bootstrap_demo and not (artifact_dir / "report.json").exists():

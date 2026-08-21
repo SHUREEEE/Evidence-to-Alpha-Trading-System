@@ -1,0 +1,14 @@
+{
+  "session_date": "2026-08-20",
+  "mode": "PAPER",
+  "status": "PASS",
+  "run_id": "PAPER-REPLACE-ME",
+  "reconciliation": {
+    "closed_to_cent": true,
+    "unreconciled_items": 0
+  },
+  "data_freshness": {
+    "passed": true
+  },
+  "exceptions": []
+}

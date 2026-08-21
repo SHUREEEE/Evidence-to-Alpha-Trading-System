@@ -1,0 +1,9 @@
+{
+  "workflow": "v4_launch_evidence_bundle",
+  "status": "READY",
+  "asof": "2026-08-20",
+  "borrow_feed_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "pb_dry_run_exit_code": 0,
+  "go_no_go_exit_code": 0,
+  "synthetic_borrow_used": false
+}

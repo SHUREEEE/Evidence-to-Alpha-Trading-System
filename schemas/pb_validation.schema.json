@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/pb_validation.schema.json",
+  "title": "PB Borrow Validation",
+  "type": "object",
+  "required": [
+    "pass_fail",
+    "failures",
+    "borrow_feed",
+    "borrow_feed_sha256",
+    "asof",
+    "required_symbols_count",
+    "missing_required_symbols",
+    "stale_symbols",
+    "required_zero_locate_symbols",
+    "max_age_days",
+    "reason"
+  ],
+  "properties": {
+    "pass_fail": {"const": true},
+    "failures": {"type": "array", "maxItems": 0},
+    "borrow_feed": {"type": "string", "minLength": 1},
+    "borrow_feed_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "asof": {"type": "string", "format": "date"},
+    "required_symbols_count": {"type": "integer", "minimum": 1},
+    "missing_required_symbols": {"type": "array", "maxItems": 0},
+    "stale_symbols": {"type": "array", "maxItems": 0},
+    "required_zero_locate_symbols": {"type": "array", "maxItems": 0},
+    "max_age_days": {"type": "integer", "minimum": 0, "maximum": 1},
+    "reason": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": true
+}

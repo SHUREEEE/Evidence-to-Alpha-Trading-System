@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "attestation_type": "corporate_action_safe_prices",
+  "artifact": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "coverage_start": "2026-07-01",
+    "coverage_end": "2026-08-21"
+  },
+  "production": {
+    "synthetic": false,
+    "provider": "licensed-market-data-provider",
+    "dataset": "us-total-return-daily",
+    "retrieved_at": "2026-08-21T02:05:00+00:00"
+  },
+  "adjustments": {
+    "price_field": "adj_close",
+    "splits": true,
+    "cash_dividends": true,
+    "special_dividends": true
+  },
+  "quality": {
+    "delistings_represented": true,
+    "unresolved_exceptions": []
+  }
+}

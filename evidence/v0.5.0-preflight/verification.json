@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "candidate": "v0.5.0-preflight",
+  "generated_at": "2026-08-21T13:41:30.6026551+08:00",
+  "baseline_commit": "4aed601e37e9c8f35a8f18ebbd5de1dcea845b78",
+  "branch": "codex/v0.5-real-readiness",
+  "code_verification": {
+    "tests_passed": 33,
+    "tests_failed": 0,
+    "warnings_as_errors": true,
+    "compileall_passed": true,
+    "git_diff_check_passed": true,
+    "json_files_parsed": 21,
+    "third_party_jsonschema_available": false
+  },
+  "artifacts": {
+    "real_data_inventory": {
+      "file": "real_data_inventory.json",
+      "sha256": "8c1059d152da1b795215cd9a232a9a0b89e980878954b085e9641eaffc7a360b"
+    },
+    "readiness": {
+      "file": "readiness.json",
+      "sha256": "44b53db70ae4a03a568aa1c97b14c564e580484740c68198d7013c375fa5fdcd",
+      "policy": "evidence-alpha-real-readiness-v0.5",
+      "decision": "BLOCKED",
+      "hard_failure_count": 20,
+      "input_error_count": 6,
+      "usable_primary_window_events": 0,
+      "out_of_sample_events": 0,
+      "verified_paper_sessions": 0
+    },
+    "development_document": {
+      "file": "docs/09_real_data_readiness_v0.5.md",
+      "sha256": "58524ae9a9b426577776624f6b23d605d6339ef0e2e1f720077ea1141902bc09"
+    }
+  },
+  "runtime": {
+    "deployed_service": "http://127.0.0.1:8080",
+    "deployed_version": "0.4.0",
+    "health_status": "ok",
+    "post_status": 405,
+    "v0_5_replaced_v0_4": false,
+    "isolated_preview_8016_listening": false
+  },
+  "decision": "BLOCKED",
+  "authorization": {
+    "live_trading": "NOT_GRANTED",
+    "broker_execution": "BLOCKED",
+    "merge_tag_and_deploy": "BLOCKED_UNTIL_ALL_READINESS_GATES_PASS"
+  }
+}
