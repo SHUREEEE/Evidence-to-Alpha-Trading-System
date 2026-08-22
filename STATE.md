@@ -1,20 +1,58 @@
 # Project State
 
 - Project: Evidence-to-Alpha Trading System
-- Release candidate: v0.4.0
-- Current phase: 09 Deploy / 10 Seal - integrated three-system validation
-- Task state: v0.4 integration, independent validation, document QA, and local read-only deployment complete; real-data continuous Paper blocked
-- Owner: Maker implementation complete; automated integrated evidence sealed; independent production acceptance pending
-- Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, standard audit, attribution artifacts, read-only API
+- Release candidate: v0.5.0 real-data readiness preflight
+- Current phase: 07 Seal - market-input and historical causal-overlap audits plus partial publication-time enrichment verified; release evidence still blocked
+- Task state: v0.5 proves the current historical cohort has zero causally valid market overlap; novelty, ticker mapping, fresh PIT weights, corporate-action-safe T+1 prices, PB, and continuous Paper gates remain blocked
+- Owner: Maker contract and verification implementation complete; independent production inputs and acceptance pending
+- Scope: read-only news export, immutable event lineage, pre-V4 event overlay, multi-factor V4 handoff, three-path backtest verification, T+1 Paper OMS, integrated event study, chronological IS/OOS and rolling validation, readiness attestations, PB/Paper cross-checks, standard audit, attribution artifacts, read-only API
 - Non-scope: news mutation, broker connectivity, live credentials, real-money execution, cloud account provisioning, economic-performance claims
 - Decision: extend the thin integration service around the existing factor platform; do not fork a full trading engine
-- Evidence: `evidence/v0.2.0/`, `evidence/v0.2.1/`, `evidence/v0.3.0/`, and `evidence/v0.4.0/`
+- Evidence: `evidence/v0.2.0/`, `evidence/v0.2.1/`, `evidence/v0.3.0/`, `evidence/v0.4.0/`, and `evidence/v0.5.0-preflight/`
 - Private remote target: `SHUREEEE/Evidence-to-Alpha-Trading-System`
 - Next gate: non-synthetic news plus factor weights and corporate-action-safe prices through event T+1, with enough events to pass the implemented rolling OOS and robustness gates; then real PB borrow, continuous Paper observation, independent risk validation, broker security design, and explicit live-release authorization
 
 ## Current release facts
 
-- Verified fact: 22 automated tests pass with ResourceWarning promoted to an error.
+- Verified fact: v0.5 reads the maintained News_Claws API shape with an optional token supplied by environment-variable name.
+- Verified fact: News_Claws uses SQLite WAL mode; a main-file copy alone is incomplete. The consistent online-backup snapshot has SHA-256 81D179EB62A1E79469B39F0EE27375E575FA6699CDB3D339663FD0DCCF009F77 and integrity_check=ok.
+- Verified fact: the source main DB hash is D1D30FC43897A8CCCC6B370A05A4926C7CC0D44F488CDFFAA82CDA5A36F9D67A, the WAL hash is 7A960CEB36DBC09B8BD926AB40FA31D204E4AA8549908C8CD4CD8897DDE1A29F, and the source database was not modified.
+- Verified fact: the latest isolated database snapshot contains 254 non-demo events, 260 articles, 260 claims, 267 evidence records, 260 reports, 48 industry impacts, and zero company impacts.
+- Verified fact: zero of the 260 reports contains a top-level novelty field.
+- Verified fact: 110 of 254 events have at least one real article published_at; this can support partial publication-time enrichment but cannot clear missing novelty or investable mapping.
+- Verified fact: the retained 100-event export belongs to the earlier F16FEB1F... snapshot; it is non-synthetic but has zero direct ticker mappings, 15 industry-only mappings, 85 unmapped events, and missing novelty for all 100 events.
+- Verified fact: an isolated service over the 81D179EB... snapshot exported the API maximum of 200 non-demo events and 206 evidence records; the service was stopped and the snapshot hash was unchanged.
+- Verified fact: the current 200-event export has zero direct ticker mappings, 28 industry-only events, 172 unmapped events, and missing novelty for every event.
+- Verified fact: those 200 real events were published from 2026-08-06 through 2026-08-20; all 200 are later than the available V6.5 weight and TDX price cutoff.
+- Verified fact: the read-only historical overlap CLI audited all 254 non-demo events and 260 report versions using SQLite `mode=ro`, `query_only`, `quick_check`, pending-WAL rejection, and before/after snapshot fingerprints.
+- Verified fact: all 260 conservative observation timestamps fall in 2026. Six report versions have publication dates inside the 2022-09-26 to 2024-12-30 market window, but all six were observed too late; the causally valid overlap is zero events and zero versions.
+- Verified fact: the historical overlap artifact contains only the snapshot hash, logical name, aggregate dates/counts, thresholds, and gates; it contains no event IDs, titles, bodies, URLs, or absolute paths.
+- Verified fact: with minimum_event_count=30, oos_fraction=0.30, and minimum_oos_events=10, the smallest cohort satisfying both exact gates is 31 events.
+- Verified fact: the read-only SQLite exporter resolved real published_at for 56 exact event versions and recorded 144 unresolved versions under the explicit eligible_published_at_only policy.
+- Verified fact: the enrichment artifact SHA-256 is CC8827736796B322A6D9925693499F075E87027F9F385B30AADF1A9CB262584C and pipeline run is NEWS-SQLITE-C51F01179B111F4F43AB.
+- Verified fact: SQLite and input events hashes, sizes, and modification times are checked before and after extraction; a non-empty WAL, missing exact report, post-cutoff article, missing published_at, or changed input fails closed.
+- Verified fact: the maintained no-cursor API supports an explicit page size of 200 in both news-export and integrate; the legacy-compatible default remains 100.
+- Verified fact: v0.5 can apply a separately produced, exact-event-version PIT enrichment artifact without modifying News_Claws.
+- Verified fact: the integration can now load a sealed news export bundle without contacting its source through `--news-export-dir`.
+- Verified fact: `sec-edgar-export` creates official SEC filing event versions with acceptance timestamps, external filing evidence URLs, explicit CIK-to-ticker mappings, deterministic text direction, and prior-30-day novelty. It rejects missing or placeholder User-Agent email addresses.
+- Verified fact: current `http://127.0.0.1:8765` still returns the synthetic demonstration event; no SEC bundle was generated because a real SEC contact email has not been supplied.
+- Verified fact: the latest local V6.5 OOS weights end on 2026-07-17, while the inspected adjusted-price panel ends on 2024-12-31 and has no corporate-action or delisting attestation.
+- Verified fact: the current code suite passes 73 tests after adding SEC export and sealed-bundle coverage.
+- Verified fact: enrichment rejects duplicate/unknown references, non-integer versions, local/example URLs, placeholder tickers, invalid effective dates, future availability, and post-generation tampering.
+- Verified fact: partial enrichment retains unresolved degradations and __UNMAPPED__; corrected observations move forward to enrichment availability time.
+- Verified fact: a caller-provided real label is downgraded when news mappings are placeholders or the API contract is degraded.
+- Verified fact: readiness now reloads CSV/Parquet factor and price artifacts, derives actual coverage, rejects duplicate or invalid values, and requires declared coverage to exactly match file contents.
+- Verified fact: `inspect-panel` double-fingerprints candidate files, emits only relative logical paths and content facts, refuses input overwrite, and retains explicit unverified provenance/PIT/corporate-action limitations.
+- Verified fact: the local V6.5 panel contains 2,114,370 non-zero weights across 2,214 tickers from 2022-09-26 through 2026-07-17.
+- Verified fact: the inspected explicit adj_close panel contains 1,371,595 rows across 516 tickers from 2014-01-02 through 2024-12-31.
+- Verified fact: local TDX SPY, NVDA, and TSM records end on 2026-07-17 and expose raw close; the V6.5 manifest explicitly says dividends and smaller corporate actions remain unadjusted.
+- Verified fact: the V6.5 manifest is tracked at b3230157f36e8f09d08b0f09a2180f2a88cb1ddb, while the audited weight and price binaries are not Git-tracked and have no immutable production-run binding.
+- Verified fact: GitHub has no multi-factor Release, the latest research Actions run has zero artifacts, and the secondary private research repository has zero branches.
+- Verified fact: readiness verifies hashes and provenance for factor, price, PB, and every Paper session artifact; PB additionally requires verified source, mapping, and canonical-file hashes plus four-way canonical hash agreement across ingestion, validation, dry run, and launch bundle.
+- Verified fact: malformed readiness dates and numeric fields fail the input-contract gate instead of raising an unhandled exception.
+- Verified fact: the current readiness report is BLOCKED with 23 hard failures, zero usable primary-window events, zero OOS events, and zero verified Paper sessions.
+- Decision: v0.5 is a preflight branch only. Do not merge, tag, or replace the v0.4 service until every readiness hard gate passes in one real-data run.
+- Verified fact: the v0.5 candidate passes 70 automated tests and 8 subtests with all warnings promoted to errors.
 - Verified fact: integrated run `INT-3294801BE2C27699` is `READY_FOR_PAPER_RESEARCH`, passes 13/13 integration hard gates, and has no standard-audit hard failures.
 - Verified fact: the multi-factor V4 production loader and all three external backtests pass in the same integrate run.
 - Verified fact: `event_study.csv` has eight NVDA/TSM rows across 1/3/5/20-day windows; the five-day primary window has no usable events.
@@ -32,7 +70,7 @@
 - Baseline fact: the v0.2.1 suite passed 15 tests after adding sparse-panel and stale-data causality regressions.
 - Verified fact: Paper comparison and fill dates are anchored to integration as-of; no post-as-of price means `BLOCKED`, zero orders, and zero fills.
 - Verified fact: V3 ends on 2024-12-31; V6.5 weights and NVDA/TSM/SPY TDX prices end on 2026-07-17.
-- Verified fact: the current news event is synthetic with an August 2026 as-of, so no causally valid real integration can run.
+- Verified fact: the deployed 8765 sample is synthetic, while the isolated database has real events but still lacks production novelty and investable company mappings; no causally valid real integration can yet clear the contract.
 - Verified fact: V6.5 documents raw-close corporate-action, survivorship, and borrow-proxy limitations.
 - Decision: continuous Paper and live launch remain `BLOCKED` until the real-data preflight hard failures are cleared.
 - Baseline fact: the sealed v0.2.0 integration passed 13 automated tests and its original compile checks.

@@ -1,0 +1,73 @@
+{
+  "artifact_type": "historical_news_overlap_audit",
+  "audit_id": "NEWS-OVERLAP-6BEBFF257C83E92EBD04",
+  "counts": {
+    "causally_observed_overlap_events": 0,
+    "causally_observed_overlap_versions": 0,
+    "chronological_oos_events": 0,
+    "non_demo_events": 254,
+    "non_demo_report_versions": 260,
+    "publication_date_only_overlap_versions": 6,
+    "publication_overlap_but_observed_too_late_versions": 6
+  },
+  "decision": "INSUFFICIENT_CAUSAL_OVERLAP",
+  "distributions": {
+    "observed_year": {
+      "2026": 260
+    },
+    "published_year": {
+      "2017": 8,
+      "2018": 2,
+      "2023": 5,
+      "2024": 1,
+      "2025": 13,
+      "2026": 231
+    }
+  },
+  "gates": [
+    {
+      "actual": 0,
+      "id": "minimum_causal_event_count",
+      "passed": false,
+      "required": 30
+    },
+    {
+      "actual": 0,
+      "id": "minimum_chronological_oos_count",
+      "passed": false,
+      "required": 10
+    }
+  ],
+  "generated_at": "2026-08-21T15:16:57.718470+00:00",
+  "market_overlap_contract": {
+    "adjusted_price_coverage_end": "2024-12-31",
+    "factor_coverage_start": "2022-09-26",
+    "latest_safe_event_date": "2024-12-30",
+    "required_return_endpoint": "T+1_or_later"
+  },
+  "observed_at_range": {
+    "maximum": "2026-08-20T09:05:38.111390+00:00",
+    "minimum": "2026-08-20T09:02:44.316438+00:00"
+  },
+  "read_safety": {
+    "input_unchanged": true,
+    "pending_wal": false,
+    "query_only": true,
+    "quick_check": "ok",
+    "sqlite_mode": "ro"
+  },
+  "schema_version": "1.0",
+  "source": {
+    "logical_name": "analysis-v3.db",
+    "selection": "non_demo_only",
+    "sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+    "size_bytes": 3174400
+  },
+  "thresholds": {
+    "minimum_event_count": 30,
+    "minimum_oos_events": 10,
+    "minimum_total_events_required": 31,
+    "oos_fraction": 0.3
+  },
+  "timestamp_policy": "observed_at=max(earliest linked published_at or event first_seen, event first_seen, event last_seen, report generated_at, report data_cutoff_at)"
+}

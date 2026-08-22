@@ -6,7 +6,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 from evidence_alpha.cli import main as cli_main
-from evidence_alpha.integration import config_from_asof, fuse_pre_v4_weights, run_integration
+from evidence_alpha.integration import (
+    _effective_data_classification,
+    config_from_asof,
+    fuse_pre_v4_weights,
+    run_integration,
+)
 from evidence_alpha.models import EntityMapping, EventSignal, EventSnapshot, EvidenceRecord
 from evidence_alpha.news_adapter import NewsExport
 
@@ -103,6 +108,21 @@ def _real_news_export(size=12):
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_real_label_cannot_override_news_contract_degradation(self):
+        news = _real_news_export()
+        news.manifest["contract_degradations_by_event_version"] = {
+            "REAL-00:v1": ["novelty_not_exposed_by_api"]
+        }
+
+        classification = _effective_data_classification(
+            news,
+            config_from_asof(
+                "2026-08-19T12:00:00Z", data_classification="real"
+            ),
+        )
+
+        self.assertEqual(classification, "unknown")
+
     def test_pre_v4_overlay_preserves_net_exposure_and_turnover(self):
         config = config_from_asof("2026-08-19T12:00:00Z")
         baseline = {"NVDA": 0.5, "TSM": 0.3, "SPY": 0.2}
@@ -141,12 +161,18 @@ class IntegrationTests(unittest.TestCase):
                     prices_path="prices.csv",
                     output_dir=output,
                     config=config_from_asof("2026-08-19T12:00:00Z"),
+                    news_page_size=200,
                     allow_synthetic_news=True,
                     write_parquet_staging=False,
                 )
+            adapter.return_value.export.assert_called_once_with(
+                limit=100,
+                allow_synthetic=True,
+                page_size=200,
+            )
             self.assertEqual(report["status"], "READY_FOR_PAPER_RESEARCH")
             self.assertEqual(report["decision"], "INCONCLUSIVE")
-            self.assertEqual(report["release"], "v0.4.0-integration")
+            self.assertEqual(report["release"], "v0.5.0-integration")
             self.assertEqual(report["data_classification"], "synthetic")
             self.assertEqual(
                 report["independent_validation"]["decision"], "INCONCLUSIVE"

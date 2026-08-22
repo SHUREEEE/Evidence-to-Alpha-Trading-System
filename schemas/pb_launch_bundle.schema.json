@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/pb_launch_bundle.schema.json",
+  "title": "PB Launch Evidence Bundle",
+  "type": "object",
+  "required": [
+    "workflow",
+    "status",
+    "asof",
+    "borrow_feed_sha256",
+    "pb_dry_run_exit_code",
+    "go_no_go_exit_code",
+    "synthetic_borrow_used"
+  ],
+  "properties": {
+    "workflow": {"const": "v4_launch_evidence_bundle"},
+    "status": {"const": "READY"},
+    "asof": {"type": "string", "format": "date"},
+    "borrow_feed_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "pb_dry_run_exit_code": {"const": 0},
+    "go_no_go_exit_code": {"const": 0},
+    "synthetic_borrow_used": {"const": false}
+  },
+  "additionalProperties": true
+}

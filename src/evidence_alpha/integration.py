@@ -28,7 +28,8 @@ from .multifactor_adapter import (
     write_v4_staging_cache,
     write_weight_panel_csv,
 )
-from .news_adapter import NewsAdapter, NewsExport, write_news_export
+from .news_adapter import NewsAdapter, NewsExport, load_news_export, write_news_export
+from .news_enrichment import apply_news_enrichment
 from .signals import SignalConfig, generate_signals, lineage_by_ticker
 from .study import run_event_study
 
@@ -92,7 +93,11 @@ def run_integration(
     weights_path: str | Path | None = None,
     sectors_path: str | Path | None = None,
     prices_path: str | Path | None = None,
+    news_admin_token: str | None = None,
+    news_export_dir: str | Path | None = None,
+    news_enrichment_path: str | Path | None = None,
     news_limit: int = 100,
+    news_page_size: int = 100,
     allow_synthetic_news: bool = False,
     write_parquet_staging: bool = True,
     run_factor_v4: bool = False,
@@ -102,9 +107,16 @@ def run_integration(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
 
-    news = NewsAdapter(news_base_url).export(
-        limit=news_limit, allow_synthetic=allow_synthetic_news
-    )
+    if news_export_dir:
+        news = load_news_export(news_export_dir)
+    else:
+        news = NewsAdapter(news_base_url, admin_token=news_admin_token).export(
+            limit=news_limit,
+            allow_synthetic=allow_synthetic_news,
+            page_size=news_page_size,
+        )
+    if news_enrichment_path:
+        news = apply_news_enrichment(news, news_enrichment_path)
     news_paths = write_news_export(news, output / "news_export")
     factor = MultiFactorAdapter(
         factor_root,
@@ -351,7 +363,7 @@ def run_integration(
         {
             'name': name,
             'passed': passed,
-            'detail': 'Computed by the v0.4.0 three-system integration run.',
+            'detail': 'Computed by the v0.5.0 three-system integration run.',
             'severity': 'hard',
         }
         for name, passed in gates.items()
@@ -391,7 +403,7 @@ def run_integration(
 
     report: dict[str, Any] = {
         "run_id": run_id,
-        "release": "v0.4.0-integration",
+        "release": "v0.5.0-integration",
         "created_at": datetime.now().astimezone().isoformat(),
         "asof": config.asof.isoformat(),
         "execution_anchor_date": config.asof.date().isoformat(),
@@ -631,6 +643,10 @@ def _effective_data_classification(
 ) -> str:
     if bool(news.manifest.get('synthetic')):
         return 'synthetic'
+    if news.manifest.get('placeholder_mapping_refs') or news.manifest.get(
+        'contract_degradations_by_event_version'
+    ):
+        return 'unknown'
     if config.data_classification == 'real':
         return 'real'
     if config.data_classification == 'synthetic':

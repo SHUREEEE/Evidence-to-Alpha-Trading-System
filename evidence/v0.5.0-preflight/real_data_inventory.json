@@ -1,0 +1,207 @@
+{
+  "schema_version": "1.0",
+  "inventory_id": "REAL-DATA-INVENTORY-20260821-V0.5",
+  "generated_at": "2026-08-21T15:58:21.7770625+08:00",
+  "decision": "BLOCKED",
+  "database_snapshot": {
+    "logical_path": "artifacts/news-real-preflight-v0.5/analysis-v3.db",
+    "sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+    "capture_method": "sqlite_online_backup",
+    "source_main_db_sha256": "d1d30fc43897a8cccc6b370a05a4926c7cc0d44f488cdffaa82cda5a36f9d67a",
+    "source_wal_sha256": "7a960ceb36dbc09b8bd926ab40fa31d204e4aa8549908c8cd4cd8897dde1a29f",
+    "integrity_check": "ok",
+    "isolated_copy": true,
+    "source_database_modified": false,
+    "preview_service_stopped_after_export": true
+  },
+  "news_database": {
+    "events_total": 254,
+    "events_non_demo": 254,
+    "events_demo": 0,
+    "articles": 260,
+    "claims": 260,
+    "evidence_records": 267,
+    "reports": 260,
+    "reports_with_top_level_novelty": 0,
+    "company_impacts": 0,
+    "industry_impacts": 48,
+    "industry_impact_breakdown": {
+      "banking_and_financial_services": 23,
+      "pharma_and_life_sciences": 15,
+      "power_generation_transmission_and_storage": 5,
+      "wind_and_clean_energy_equipment": 4,
+      "software_and_cloud_services": 1
+    },
+    "first_seen_min": "2017-04-08T00:00:00+00:00",
+    "last_seen_max": "2026-08-20T09:05:37.255227+00:00"
+  },
+  "news_export": {
+    "api_dialect": "news-claws-current",
+    "read_only": true,
+    "source_snapshot_sha256": "f16feb1fe5edbb3758d68e40b4f54d2b7265392673f948ce36d44d72570d5163",
+    "matches_current_database_snapshot": false,
+    "requested_limit": 100,
+    "api_cursor_available": false,
+    "api_max_limit": 200,
+    "event_versions": 100,
+    "evidence_records": 104,
+    "synthetic": false,
+    "events_with_direct_ticker_mapping": 0,
+    "events_with_industry_only_mapping": 15,
+    "events_without_investable_mapping": 85,
+    "events_with_zero_novelty": 100,
+    "events_with_contract_degradation": 100,
+    "observed_at_min": "2026-08-20T09:03:14.525257+00:00",
+    "observed_at_max": "2026-08-20T09:04:40.621964+00:00",
+    "degradations": {
+      "published_at_fell_back_to_first_seen": 100,
+      "no_investable_company_or_industry_mapping": 85,
+      "novelty_not_exposed_by_api": 100
+    },
+    "files": {
+      "events.json": {
+        "sha256": "07048edce2ec084de580a78564707a3b948ace3676dbc82c8b5c33fbff14e8f1"
+      },
+      "evidence.json": {
+        "sha256": "5c6405cd3b5ea0c9c7bbfee471b9755eb899dd65a8848585e0a4f672b808d784"
+      },
+      "mappings.csv": {
+        "sha256": "b46962064ef7cf829fbc799bf27e918261e3f86ed1136c4538c23cc00b5f857c"
+      },
+      "news_manifest.json": {
+        "sha256": "afb14adc97c17d3348146b7227dc972b5ef4d6061ba7c9f086fda23777d6b036"
+      }
+    },
+    "current_snapshot_export": {
+      "source_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+      "matches_current_database_snapshot": true,
+      "requested_limit": 200,
+      "requested_page_size": 200,
+      "api_cursor_available": false,
+      "event_versions": 200,
+      "evidence_records": 206,
+      "synthetic": false,
+      "events_with_direct_ticker_mapping": 0,
+      "events_with_industry_only_mapping": 28,
+      "events_without_investable_mapping": 172,
+      "events_with_zero_novelty": 200,
+      "events_with_contract_degradation": 200,
+      "events_with_real_published_at": 56,
+      "events_with_published_at_fallback": 144,
+      "observed_at_min": "2026-08-20T09:02:45.596090+00:00",
+      "observed_at_max": "2026-08-20T09:05:38.111390+00:00",
+      "degradations_after_enrichment": {
+        "published_at_fell_back_to_first_seen": 144,
+        "no_investable_company_or_industry_mapping": 172,
+        "novelty_not_exposed_by_api": 200
+      },
+      "files": {
+        "events.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/events.json",
+          "sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5"
+        },
+        "evidence.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/evidence.json",
+          "sha256": "eb2d9789ec5036a298b7871669d1282e30a513e67baca0938fe8d866c9e7d3a1"
+        },
+        "mappings.csv": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/mappings.csv",
+          "sha256": "70d92d429c091e3436c9ed145a0e499d8e2deffc271bc54679e37e679aaa85a3"
+        },
+        "news_manifest.json": {
+          "logical_path": "artifacts/news-real-preflight-v0.5/export-v3-200/news_manifest.json",
+          "sha256": "914f5fdcb740477694cbcb3d04fbb1afc074de2812a1a9b85030500b7ce6de19"
+        }
+      }
+    },
+    "publication_time_enrichment": {
+      "logical_path": "artifacts/news-real-preflight-v0.5/news_enrichment.sqlite.json",
+      "sha256": "cc8827736796b322a6d9925693499f075e87027f9f385b30aadf1a9cb262584c",
+      "generated_at": "2026-08-21T07:48:16.528723+00:00",
+      "source_repository": "SHUREEEE/News_Claws",
+      "source_commit": "357e2614264b533def7d3f9a09b196fa296697bb",
+      "pipeline_run_id": "NEWS-SQLITE-C51F01179B111F4F43AB",
+      "selection_policy": "eligible_published_at_only",
+      "requested_event_versions": 200,
+      "enriched_event_versions": 56,
+      "unresolved_event_versions": 144,
+      "database_input_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+      "events_input_sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5",
+      "applied_manifest_sha256": "0e68bd0577e61e3f1034b3e4825a97cf0653b0e6d4408c396b0cee098e248c89",
+      "event_timestamp_rows_changed": 0,
+      "all_event_versions_still_contract_degraded": true
+    }
+  },
+  "factor_and_prices": {
+    "verification_clone": {
+      "repository": "SHUREEEE/multi-factor-alpha-platform",
+      "branch": "main",
+      "commit": "9792ed27059b1179b39cca8fca2982fe22baf86e",
+      "clean": true
+    },
+    "latest_research_artifact": {
+      "branch": "codex/v6-tdx-us-research",
+      "commit": "365e53e5e85cfa2ee2f530403f3d934cd38b8ca3",
+      "evidence_source": "evidence/v0.2.1/real_data_preflight.json",
+      "artifact_available_in_verification_clone": false,
+      "weights_coverage_end": "2026-07-17",
+      "price_coverage_end": "2026-07-17",
+      "point_in_time_universe_attested": false,
+      "corporate_action_safe_prices_attested": false,
+      "known_limitations": [
+        "raw close with absolute returns over 35 percent masked",
+        "dividends and smaller corporate actions remain unadjusted",
+        "current-constituent survivorship bias",
+        "borrow cost is a proxy without historical security-level availability"
+      ]
+    },
+    "required_event_date": "2026-08-20",
+    "required_t_plus_one_date_or_later": "2026-08-21"
+  },
+  "pb_and_paper": {
+    "real_pb_borrow_feed_present": false,
+    "pb_validation_present": false,
+    "pb_dry_run_present": false,
+    "pb_launch_bundle_present": false,
+    "verified_continuous_paper_sessions": 0,
+    "required_continuous_paper_sessions": 20
+  },
+  "gates": {
+    "news_is_non_synthetic": true,
+    "news_contract_is_complete": false,
+    "direct_ticker_mapping_exists": false,
+    "usable_primary_window_events_at_least_30": false,
+    "out_of_sample_events_at_least_10": false,
+    "rolling_and_robustness_gates_pass": false,
+    "factor_weights_cover_event_t_plus_one": false,
+    "factor_point_in_time_provenance_passes": false,
+    "prices_cover_event_t_plus_one": false,
+    "prices_are_corporate_action_safe": false,
+    "pb_borrow_gates_pass": false,
+    "continuous_paper_sessions_at_least_20": false
+  },
+  "hard_failures": [
+    "news_contract_is_complete",
+    "direct_ticker_mapping_exists",
+    "usable_primary_window_events_at_least_30",
+    "out_of_sample_events_at_least_10",
+    "rolling_and_robustness_gates_pass",
+    "factor_weights_cover_event_t_plus_one",
+    "factor_point_in_time_provenance_passes",
+    "prices_cover_event_t_plus_one",
+    "prices_are_corporate_action_safe",
+    "pb_borrow_gates_pass",
+    "continuous_paper_sessions_at_least_20"
+  ],
+  "required_next_inputs": [
+    "News_Claws must expose stable novelty and verified company-to-ticker identifiers, or a separately versioned mapping source must be supplied.",
+    "Point-in-time factor weights must cover every selected event through the required return window.",
+    "Adjusted or total-return prices must cover event T+1 and attest splits, cash and special dividends, and delistings.",
+    "A real security-level PB borrow feed and passing PB validation, dry-run, and launch bundle are required.",
+    "Twenty gap-free, hashed Paper sessions with freshness and cent-level reconciliation are required."
+  ],
+  "authorization": {
+    "live_trading": "NOT_GRANTED",
+    "broker_execution": "BLOCKED"
+  }
+}

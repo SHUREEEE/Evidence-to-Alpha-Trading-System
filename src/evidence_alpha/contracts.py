@@ -81,6 +81,7 @@ def load_mappings(path: str | Path) -> list[EntityMapping]:
                     ticker=ticker,
                     sector=sector,
                     impact_multiplier=float(row.get("impact_multiplier", 1.0)),
+                    event_ref=str(row.get("event_ref", "")).strip() or None,
                 )
             )
     return result
@@ -142,4 +143,3 @@ def file_digests(paths: dict[str, str | Path]) -> dict[str, str]:
         source = Path(path)
         result[name] = content_hash(source.read_text(encoding="utf-8-sig"))
     return result
-

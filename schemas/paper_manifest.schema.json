@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/paper_manifest.schema.json",
+  "title": "Continuous Paper Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "mode",
+    "market_calendar",
+    "calendar_source",
+    "expected_session_dates",
+    "missing_session_dates",
+    "sessions",
+    "exceptions"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "mode": {"const": "PAPER"},
+    "market_calendar": {"enum": ["XNYS", "XNAS"]},
+    "calendar_source": {
+      "type": "object",
+      "required": ["name", "version", "generated_at"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "generated_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "expected_session_dates": {
+      "type": "array",
+      "minItems": 20,
+      "uniqueItems": true,
+      "items": {"type": "string", "format": "date"}
+    },
+    "missing_session_dates": {"type": "array", "maxItems": 0},
+    "sessions": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["session_date", "artifact", "sha256"],
+        "properties": {
+          "session_date": {"type": "string", "format": "date"},
+          "artifact": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "exceptions": {"type": "array", "maxItems": 0}
+  },
+  "additionalProperties": false
+}

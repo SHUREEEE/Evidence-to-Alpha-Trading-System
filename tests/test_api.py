@@ -28,6 +28,10 @@ class ApiTests(unittest.TestCase):
                 json.dumps({"decision": "INCONCLUSIVE"}),
                 encoding="utf-8",
             )
+            (artifact_dir / "readiness.json").write_text(
+                json.dumps({"decision": "BLOCKED"}),
+                encoding="utf-8",
+            )
             (artifact_dir / "event_study.csv").write_text(
                 "event_ref,ticker,window_days,status\n"
                 "E1:v1,NVDA,1,ok\n",
@@ -53,6 +57,12 @@ class ApiTests(unittest.TestCase):
                 ) as response:
                     independent = json.load(response)
                 self.assertEqual(independent["decision"], "INCONCLUSIVE")
+                with urlopen(
+                    f"{base_url}/api/v1/runs/latest/readiness",
+                    timeout=5,
+                ) as response:
+                    readiness = json.load(response)
+                self.assertEqual(readiness["decision"], "BLOCKED")
                 with urlopen(
                     f"{base_url}/api/v1/runs/latest/event-study",
                     timeout=5,

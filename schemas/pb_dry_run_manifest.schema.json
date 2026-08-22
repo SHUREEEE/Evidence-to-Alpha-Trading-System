@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/pb_dry_run_manifest.schema.json",
+  "title": "PB Gated Dry-Run Manifest",
+  "type": "object",
+  "required": [
+    "workflow",
+    "status",
+    "asof",
+    "borrow_feed",
+    "borrow_feed_sha256",
+    "pipeline_exit_code",
+    "synthetic_borrow_used"
+  ],
+  "properties": {
+    "workflow": {"const": "v4_pb_live_dry_run"},
+    "status": {"const": "PASS"},
+    "asof": {"type": "string", "format": "date"},
+    "borrow_feed": {"type": "string", "minLength": 1},
+    "borrow_feed_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "pipeline_exit_code": {"const": 0},
+    "synthetic_borrow_used": {"const": false}
+  },
+  "additionalProperties": true
+}

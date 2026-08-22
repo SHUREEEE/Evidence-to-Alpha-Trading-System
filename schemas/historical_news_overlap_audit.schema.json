@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/evidence-alpha/historical_news_overlap_audit.schema.json",
+  "title": "Historical news causal-overlap audit",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "audit_id",
+    "generated_at",
+    "source",
+    "read_safety",
+    "timestamp_policy",
+    "market_overlap_contract",
+    "thresholds",
+    "counts",
+    "distributions",
+    "observed_at_range",
+    "gates",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "historical_news_overlap_audit"},
+    "audit_id": {
+      "type": "string",
+      "pattern": "^NEWS-OVERLAP-[0-9A-F]{20}$"
+    },
+    "generated_at": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "required": ["logical_name", "sha256", "size_bytes", "selection"],
+      "properties": {
+        "logical_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$"
+        },
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "selection": {"const": "non_demo_only"}
+      },
+      "additionalProperties": false
+    },
+    "read_safety": {
+      "type": "object",
+      "required": [
+        "sqlite_mode",
+        "query_only",
+        "quick_check",
+        "pending_wal",
+        "input_unchanged"
+      ],
+      "properties": {
+        "sqlite_mode": {"const": "ro"},
+        "query_only": {"const": true},
+        "quick_check": {"const": "ok"},
+        "pending_wal": {"const": false},
+        "input_unchanged": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "timestamp_policy": {"type": "string", "minLength": 1},
+    "market_overlap_contract": {
+      "type": "object",
+      "required": [
+        "factor_coverage_start",
+        "adjusted_price_coverage_end",
+        "latest_safe_event_date",
+        "required_return_endpoint"
+      ],
+      "properties": {
+        "factor_coverage_start": {"type": "string", "format": "date"},
+        "adjusted_price_coverage_end": {"type": "string", "format": "date"},
+        "latest_safe_event_date": {"type": "string", "format": "date"},
+        "required_return_endpoint": {"const": "T+1_or_later"}
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "type": "object",
+      "required": [
+        "minimum_event_count",
+        "oos_fraction",
+        "minimum_oos_events",
+        "minimum_total_events_required"
+      ],
+      "properties": {
+        "minimum_event_count": {"type": "integer", "minimum": 1},
+        "oos_fraction": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "minimum_oos_events": {"type": "integer", "minimum": 1},
+        "minimum_total_events_required": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "non_demo_report_versions",
+        "non_demo_events",
+        "causally_observed_overlap_versions",
+        "causally_observed_overlap_events",
+        "publication_date_only_overlap_versions",
+        "publication_overlap_but_observed_too_late_versions",
+        "chronological_oos_events"
+      ],
+      "properties": {
+        "non_demo_report_versions": {"type": "integer", "minimum": 0},
+        "non_demo_events": {"type": "integer", "minimum": 0},
+        "causally_observed_overlap_versions": {"type": "integer", "minimum": 0},
+        "causally_observed_overlap_events": {"type": "integer", "minimum": 0},
+        "publication_date_only_overlap_versions": {"type": "integer", "minimum": 0},
+        "publication_overlap_but_observed_too_late_versions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chronological_oos_events": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "distributions": {
+      "type": "object",
+      "required": ["observed_year", "published_year"],
+      "properties": {
+        "observed_year": {"$ref": "#/$defs/yearDistribution"},
+        "published_year": {"$ref": "#/$defs/yearDistribution"}
+      },
+      "additionalProperties": false
+    },
+    "observed_at_range": {
+      "type": "object",
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": {"type": ["string", "null"], "format": "date-time"},
+        "maximum": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "passed", "actual", "required"],
+        "properties": {
+          "id": {
+            "enum": [
+              "minimum_causal_event_count",
+              "minimum_chronological_oos_count"
+            ]
+          },
+          "passed": {"type": "boolean"},
+          "actual": {"type": "integer", "minimum": 0},
+          "required": {"type": "integer", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "decision": {
+      "enum": ["COHORT_CANDIDATE", "INSUFFICIENT_CAUSAL_OVERLAP"]
+    }
+  },
+  "$defs": {
+    "yearDistribution": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]{4}$": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

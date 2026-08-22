@@ -1,0 +1,221 @@
+{
+  "authorization": {
+    "broker_execution": "BLOCKED",
+    "live_trading": "NOT_GRANTED",
+    "next_step": "clear every hard failure and rerun this policy"
+  },
+  "counts": {
+    "out_of_sample_events": 0,
+    "paper_sessions": 0,
+    "usable_primary_window_events": 0
+  },
+  "decision": "BLOCKED",
+  "evaluated_at": "2026-08-21T21:20:01.388039+08:00",
+  "facts": [
+    "A caller-provided real label is not sufficient for this policy.",
+    "Every external data class is cross-checked against provenance or file hashes.",
+    "Passing this policy permits an authorization review; it does not authorize trading."
+  ],
+  "gates": [
+    {
+      "detail": "hard failures=[]",
+      "name": "integration_integrity",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "configured primary=30, OOS=10, folds=3",
+      "name": "validation_policy_not_weakened",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "usable=0, required=30",
+      "name": "primary_event_sample",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "usable=0, required=10",
+      "name": "oos_event_sample",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "decision=INCONCLUSIVE, failed=['double_cost_exceeds_factor_baseline', 'event_sample_sufficient', 'oos_primary_window_positive', 'oos_sample_sufficient', 'real_data_classification', 'rolling_folds_complete', 'rolling_primary_window_stable']",
+      "name": "robustness_and_rolling",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "raw News_Claws contract used without enrichment",
+      "name": "news_enrichment_provenance",
+      "passed": true,
+      "severity": "hard"
+    },
+    {
+      "detail": "synthetic=True, placeholder mappings=[], degradations=[]",
+      "name": "news_non_synthetic",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "bad refs=['evt_5ace256258336f7b:v2'], bad evidence=['evi_24658b493dfdcd5a', 'evi_636f3ca8b6cc7b3c', 'evi_702f51ce7d2ef585', 'evi_95f653cd6ec916fe']",
+      "name": "news_external_provenance",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "factor and price inputs must exist outside fixture/demo paths",
+      "name": "production_input_paths",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "verified sha256=54dceb52dba55cfef16865b353d875e2724eebfe678f9c38672d6a62714faca0",
+      "name": "factor_artifact_hash",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "declared=None..None, actual=2026-08-18..2026-08-19, rows=6, tickers=3",
+      "name": "factor_artifact_contents",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "requires immutable production commit/run and PIT universe with no exceptions",
+      "name": "factor_production_provenance",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "coverage=2026-08-18..2026-08-19, required=2026-08-19..2026-08-20",
+      "name": "factor_coverage_through_t_plus_one",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "verified sha256=20929844fc88af17dbe8895532c52edb4a86e851d32d6680e11af60ee0db3240",
+      "name": "price_artifact_hash",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "declared=None..None, actual=2026-08-18..2026-08-21, field=adj_close, rows=12, tickers=3",
+      "name": "price_artifact_contents",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "requires adjusted prices, split/dividend coverage, delistings, and no exceptions",
+      "name": "corporate_action_safe_prices",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "coverage=2026-08-18..2026-08-21, required=2026-08-19..2026-08-20",
+      "name": "price_coverage_through_t_plus_one",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "source=None, real=None, source hash=False, mapping hash=False, canonical hash=False, date max=None",
+      "name": "pb_ingestion_provenance",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "reason=None, required=None",
+      "name": "pb_borrow_validation",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "same file=False, attestations agree=True, sha256=unavailable",
+      "name": "pb_real_feed_crosscheck",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "status=None, asof=None",
+      "name": "pb_gated_dry_run",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "status=None",
+      "name": "pb_launch_bundle",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "requires versioned XNYS/XNAS calendar provenance and no exceptions",
+      "name": "continuous_paper_contract",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "observed=0, expected=0, required=20",
+      "name": "continuous_paper_sessions",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "invalid sessions=[]",
+      "name": "continuous_paper_reconciliation",
+      "passed": false,
+      "severity": "hard"
+    },
+    {
+      "detail": "errors=['factor attestation: missing path', 'price attestation: missing path', 'PB ingestion manifest: missing path', 'PB validation: missing path', 'PB dry-run manifest: missing path', 'PB launch bundle: missing path', 'Paper manifest: missing path']",
+      "name": "input_contract_valid",
+      "passed": false,
+      "severity": "hard"
+    }
+  ],
+  "hard_failures": [
+    "primary_event_sample",
+    "oos_event_sample",
+    "robustness_and_rolling",
+    "news_non_synthetic",
+    "news_external_provenance",
+    "production_input_paths",
+    "factor_artifact_hash",
+    "factor_artifact_contents",
+    "factor_production_provenance",
+    "factor_coverage_through_t_plus_one",
+    "price_artifact_hash",
+    "price_artifact_contents",
+    "corporate_action_safe_prices",
+    "price_coverage_through_t_plus_one",
+    "pb_ingestion_provenance",
+    "pb_borrow_validation",
+    "pb_real_feed_crosscheck",
+    "pb_gated_dry_run",
+    "pb_launch_bundle",
+    "continuous_paper_contract",
+    "continuous_paper_sessions",
+    "continuous_paper_reconciliation",
+    "input_contract_valid"
+  ],
+  "input_errors": [
+    "factor attestation: missing path",
+    "price attestation: missing path",
+    "PB ingestion manifest: missing path",
+    "PB validation: missing path",
+    "PB dry-run manifest: missing path",
+    "PB launch bundle: missing path",
+    "Paper manifest: missing path"
+  ],
+  "integration_run_id": "INT-3294801BE2C27699",
+  "policy": "evidence-alpha-real-readiness-v0.5",
+  "schema_version": "1.0",
+  "verified_hashes": {
+    "factor_weights": "54dceb52dba55cfef16865b353d875e2724eebfe678f9c38672d6a62714faca0",
+    "news_enrichment": null,
+    "paper_sessions": {},
+    "pb_borrow_feed": null,
+    "prices": "20929844fc88af17dbe8895532c52edb4a86e851d32d6680e11af60ee0db3240"
+  }
+}

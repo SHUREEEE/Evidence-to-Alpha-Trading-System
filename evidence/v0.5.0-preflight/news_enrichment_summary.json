@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "news_enrichment_preflight_summary",
+  "generated_at": "2026-08-21T15:58:21.7770625+08:00",
+  "decision": "PARTIAL_BLOCKED",
+  "source": {
+    "repository": "SHUREEEE/News_Claws",
+    "commit": "357e2614264b533def7d3f9a09b196fa296697bb",
+    "database_snapshot_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+    "database_integrity_check": "ok",
+    "source_database_modified": false
+  },
+  "api_export": {
+    "dialect": "news-claws-current",
+    "requested_limit": 200,
+    "requested_page_size": 200,
+    "cursor_available": false,
+    "event_versions": 200,
+    "evidence_records": 206,
+    "events_sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5",
+    "evidence_sha256": "eb2d9789ec5036a298b7871669d1282e30a513e67baca0938fe8d866c9e7d3a1",
+    "mappings_sha256": "70d92d429c091e3436c9ed145a0e499d8e2deffc271bc54679e37e679aaa85a3",
+    "manifest_sha256": "914f5fdcb740477694cbcb3d04fbb1afc074de2812a1a9b85030500b7ce6de19"
+  },
+  "enrichment": {
+    "pipeline_run_id": "NEWS-SQLITE-C51F01179B111F4F43AB",
+    "artifact_sha256": "cc8827736796b322a6d9925693499f075e87027f9f385b30aadf1a9cb262584c",
+    "selection_policy": "eligible_published_at_only",
+    "requested_event_versions": 200,
+    "enriched_event_versions": 56,
+    "unresolved_event_versions": 144,
+    "input_database_sha256": "81d179eb62a1e79469b39f0ee27375e575fa6699cdb3d339663fd0dccf009f77",
+    "input_events_sha256": "8ca4f3f02e44d8dc47ae3481e8f8ead99b9910dc74683aa00bea28ebcfa179d5",
+    "applied_manifest_sha256": "0e68bd0577e61e3f1034b3e4825a97cf0653b0e6d4408c396b0cee098e248c89",
+    "event_timestamp_rows_changed": 0,
+    "observed_at_moved_backward": 0
+  },
+  "remaining_contract_gaps": {
+    "event_versions_missing_novelty": 200,
+    "event_versions_without_investable_mapping": 172,
+    "event_versions_using_published_at_fallback": 144,
+    "event_versions_with_any_degradation": 200,
+    "direct_ticker_mappings": 0
+  },
+  "runtime": {
+    "isolated_service": "127.0.0.1:8016",
+    "service_stopped": true,
+    "deployed_v0_4_replaced": false
+  },
+  "authorization": {
+    "merge": "BLOCKED",
+    "deployment": "BLOCKED",
+    "live_trading": "NOT_GRANTED"
+  }
+}

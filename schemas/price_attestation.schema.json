@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evidence-alpha.local/schemas/price_attestation.schema.json",
+  "title": "Corporate-Action-Safe Price Attestation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "attestation_type",
+    "artifact",
+    "production",
+    "adjustments",
+    "quality"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "attestation_type": {"const": "corporate_action_safe_prices"},
+    "artifact": {
+      "type": "object",
+      "required": ["sha256", "coverage_start", "coverage_end"],
+      "properties": {
+        "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+        "coverage_start": {"type": "string", "format": "date"},
+        "coverage_end": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    },
+    "production": {
+      "type": "object",
+      "required": ["synthetic", "provider", "dataset", "retrieved_at"],
+      "properties": {
+        "synthetic": {"const": false},
+        "provider": {"type": "string", "minLength": 1},
+        "dataset": {"type": "string", "minLength": 1},
+        "retrieved_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "adjustments": {
+      "type": "object",
+      "required": ["price_field", "splits", "cash_dividends", "special_dividends"],
+      "properties": {
+        "price_field": {"enum": ["adj_close", "total_return_index"]},
+        "splits": {"const": true},
+        "cash_dividends": {"const": true},
+        "special_dividends": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "required": ["delistings_represented", "unresolved_exceptions"],
+      "properties": {
+        "delistings_represented": {"const": true},
+        "unresolved_exceptions": {"type": "array", "maxItems": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

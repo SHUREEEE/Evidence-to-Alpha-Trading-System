@@ -1,0 +1,13 @@
+{
+  "pass_fail": true,
+  "failures": [],
+  "borrow_feed": "replace/with/real/borrow.csv",
+  "borrow_feed_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "asof": "2026-08-20",
+  "required_symbols_count": 2,
+  "missing_required_symbols": [],
+  "stale_symbols": [],
+  "required_zero_locate_symbols": [],
+  "max_age_days": 1,
+  "reason": "PASS"
+}

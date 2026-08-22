@@ -34,8 +34,15 @@ def generate_signals(
     config: SignalConfig,
 ) -> tuple[list[EventSignal], list[dict[str, str]]]:
     mapping_index: dict[str, list[EntityMapping]] = {}
+    event_mapping_index: dict[tuple[str, str], list[EntityMapping]] = {}
     for mapping in mappings:
-        mapping_index.setdefault(mapping.entity.casefold(), []).append(mapping)
+        entity_key = mapping.entity.casefold()
+        if mapping.event_ref:
+            event_mapping_index.setdefault(
+                (mapping.event_ref, entity_key), []
+            ).append(mapping)
+        else:
+            mapping_index.setdefault(entity_key, []).append(mapping)
 
     signals: list[EventSignal] = []
     unmapped: list[dict[str, str]] = []
@@ -46,7 +53,10 @@ def generate_signals(
         uncertain_multiplier = config.uncertain_multiplier if event.direction == "uncertain" else 1.0
         candidates: list[EntityMapping] = []
         for entity in (*event.entities, *event.sectors):
-            matches = mapping_index.get(entity.casefold(), [])
+            entity_key = entity.casefold()
+            matches = event_mapping_index.get((event.ref, entity_key))
+            if matches is None:
+                matches = mapping_index.get(entity_key, [])
             if not matches:
                 unmapped.append({"event_ref": event.ref, "entity": entity})
             candidates.extend(matches)
@@ -98,4 +108,3 @@ def lineage_by_ticker(signals: Iterable[EventSignal]) -> dict[str, dict[str, tup
         ticker: {name: tuple(sorted(values)) for name, values in bucket.items()}
         for ticker, bucket in grouped.items()
     }
-

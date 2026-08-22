@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "enrichment_type": "news_event_enrichment",
+  "generated_at": "2026-08-19T10:30:00+00:00",
+  "source": {
+    "synthetic": false,
+    "repository": "SHUREEEE/News_Claws",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pipeline_run_id": "REPLACE-WITH-PRODUCTION-RUN-ID",
+    "methodology": "REPLACE-WITH-VERSIONED-PIT-METHODOLOGY",
+    "input_artifacts": [
+      {
+        "artifact_type": "news_claws_sqlite_snapshot",
+        "artifact": "REPLACE-WITH-CHECKPOINTED-SQLITE-SNAPSHOT.db",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "artifact_type": "news_export_events",
+        "artifact": "REPLACE-WITH-NEWS-EXPORT-events.json",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
+  },
+  "events": [
+    {
+      "event_id": "REPLACE-WITH-EXACT-EVENT-ID",
+      "event_version": 1,
+      "available_at": "2026-08-19T10:00:00+00:00",
+      "source_urls": [
+        "https://www.sec.gov/news/press-release"
+      ],
+      "published_at": "2026-08-19T08:55:00+00:00",
+      "novelty": 0.8,
+      "mappings": [
+        {
+          "entity": "NVIDIA",
+          "ticker": "NVDA",
+          "sector": "Technology",
+          "impact_multiplier": 1.0,
+          "effective_from": "2020-01-01",
+          "effective_to": null,
+          "source_url": "https://www.sec.gov/edgar/browse/?CIK=1045810"
+        }
+      ]
+    }
+  ]
+}

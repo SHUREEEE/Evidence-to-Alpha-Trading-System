@@ -24,7 +24,7 @@ def configure(doc: Document, short_name: str) -> None:
     footer = doc.sections[0].footer.paragraphs[0]
     footer.clear()
     footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = footer.add_run("v0.4.0 | Internal research document | Page ")
+    run = footer.add_run("v0.5.0 | Internal research document | Page ")
     base.set_run_font(run, size=9, color=MUTED)
     field = OxmlElement("w:fldSimple")
     field.set(qn("w:instr"), "PAGE")
@@ -52,7 +52,7 @@ def title_block(doc: Document, title: str, subtitle: str, status: str) -> None:
     base.set_run_font(p.add_run(subtitle), size=13, color=RGBColor(70, 74, 80))
     rows = (
         ("项目", "Evidence-to-Alpha Trading System"),
-        ("版本", "v0.4.0 Integrated Validation"),
+        ("版本", "v0.5.0 Real-Data Readiness Preflight"),
         ("日期", "2026-08-21"),
         ("状态", status),
     )
@@ -307,7 +307,7 @@ def build_prd() -> Document:
 def build_development() -> Document:
     doc = Document()
     configure(doc, "开发与部署文档")
-    title_block(doc, "开发与部署文档", "Evidence-to-Alpha v0.4.0", "集成独立验证和本地只读部署已验证；Live 阻断")
+    title_block(doc, "开发与部署文档", "Evidence-to-Alpha v0.5.0", "真实数据预检机制已验证；真实输入和 Live 仍阻断")
 
     base.add_heading(doc, "1. 架构决策")
     para(doc, "采用薄集成层：News Claws API -> NewsAdapter -> immutable EventSnapshot -> EventSignal -> pre-V4 Overlay -> multi-factor V4 -> T+1 backtest/Paper OMS -> IndependentValidation -> read-only API。")
@@ -321,7 +321,7 @@ def build_development() -> Document:
         ["Contracts/Models", "contracts.py / models.py", "事件、证据、价格、权重类型与校验"],
         ["Signals", "signals.py", "门控、衰减和 lineage"],
         ["Independent Validation", "independent_validation.py", "按时间划分 IS/OOS、滚动折叠、稳健性门禁和三态决策"],
-        ["API/CLI", "api.py / cli.py", "只读 artifact 服务和可复现命令"],
+        ["API/CLI", "api.py / cli.py", "只读 artifact 服务、inspect-panel、readiness 和可复现命令"],
     ], [1800, 2750, 4810])
 
     base.add_heading(doc, "3. 新闻 API 契约")
@@ -340,7 +340,7 @@ def build_development() -> Document:
     base.add_heading(doc, "4. 多因子契约")
     table(doc, ["输入/输出", "支持格式", "关键字段"], [
         ["权重", "CSV/Parquet；长表或宽表", "date,ticker,weight 或 date + ticker columns"],
-        ["行情", "CSV/Parquet；长表或宽表", "date,ticker,adj_close 或 date + ticker columns"],
+        ["行情", "CSV/Parquet；长表或宽表", "date,ticker,adj_close/total_return_index 或宽表"],
         ["行业", "CSV", "symbol/ticker,sector"],
         ["V4 cache", "Parquet + CSV", "v3_weights.parquet、v3_sector_map.csv"],
     ], [1900, 2950, 4510])
@@ -363,6 +363,8 @@ def build_development() -> Document:
         ["测试", "python -m unittest discover -s tests -v"],
         ["独立验证演示", "python -m evidence_alpha demo --output-dir artifacts/demo-v0.4"],
         ["新闻导出", "python -m evidence_alpha news-export --news-base-url http://127.0.0.1:8765 --output-dir artifacts/news"],
+        ["市场输入检查", "python -m evidence_alpha inspect-panel --input <file> --kind <factor_weights|adjusted_prices>"],
+        ["发布就绪检查", "python -m evidence_alpha readiness --artifact-dir <integrated> --pb-ingestion-manifest <manifest> ..."],
         ["结果服务", "python -m evidence_alpha serve --artifact-dir artifacts/integrated --host 127.0.0.1 --port 8080"],
         ["Docker", "docker compose up --build"],
     ], [1900, 7460])
@@ -385,7 +387,7 @@ def build_development() -> Document:
 
     base.add_heading(doc, "8. 测试和本轮证据")
     bullets(doc, [
-        "22/22 unittest 通过；ResourceWarning 按错误处理后仍为零。",
+        "63/63 unittest 和 8 个 subtest 通过；所有 warning 按错误处理后仍为零。",
         "独立验证覆盖正向 PROMOTE、负向 OOS REJECT、小样本 INCONCLUSIVE、泄漏、未知引用、坏行和非有限场景值。",
         "integrate 回归覆盖 synthetic 强制分类、缺失/非有限场景拒绝、真实正向样本晋级、过期行情阻断、CLI verify 和 API 制品读取。",
         "新闻服务：1 synthetic event / 2 versions；NVDA/TSM 证据可追溯。",
@@ -395,6 +397,14 @@ def build_development() -> Document:
         "Paper OMS：T+1_ADJ_CLOSE_PAPER，会计闭合到 0.01。",
     ])
     para(doc, "三日 synthetic 夹具产生的年化、Sharpe 和换手没有统计意义，只证明接口和执行流程。5 日主窗口仍无可用事件，当前研究决策为 INCONCLUSIVE。")
+    base.add_heading(doc, "8.1 v0.5 真实数据门禁", level=2)
+    bullets(doc, [
+        "readiness 重新读取 CSV/Parquet，核对内容覆盖、字段语义、非有限值、重复记录和 SHA-256。",
+        "PB 必须提交真实来源摄取清单；来源、映射、规范化文件哈希全部校验，规范化哈希还要与 validation、dry run、launch bundle 四方一致。",
+        "当前真实 V6.5 权重截至 2026-07-17；显式 adj_close 面板截至 2024-12-31；较新的 TDX 数据为 raw close。",
+        "当前 200 个真实事件均晚于可用市场输入，且缺少稳定 novelty、PIT ticker mapping、真实 PB 和连续 20 个 Paper session。",
+        "封存 readiness 为 BLOCKED：23 个硬失败、0 个主窗口样本、0 个 OOS 样本、0 个验证 Paper session。",
+    ])
 
     base.add_heading(doc, "9. 部署")
     base.add_heading(doc, "9.1 本地只读部署", level=2)
@@ -409,7 +419,7 @@ def build_development() -> Document:
         ["新闻写操作", "禁止", "无解除需求；集成保持只读"],
         ["真实 V3 数据", "缺失", "提供本地 v3_weights 和 prices"],
         ["真实事件/OOS", "机制完成；数据缺失", "真实样本通过滚动 OOS、placebo、延迟和成本压力"],
-        ["PB borrow", "BLOCKED", "真实 feed + dry-run manifest + acceptance gate"],
+        ["PB borrow", "BLOCKED", "真实来源摄取清单 + 四方哈希一致 + validation/dry-run/launch gate"],
         ["券商连接", "不存在", "单独安全设计、凭据和发布审批"],
         ["Live launch", "BLOCKED", "全部 P0 READY + 独立验证 + 发布授权"],
     ], [2200, 1700, 5460])
@@ -419,7 +429,7 @@ def build_development() -> Document:
         "Maker 完成代码、近端测试和文档；Verifier 证据单独记录。",
         "重要结论标记事实、推断、未知和决策。",
         "最后一次编辑后只执行 VERIFY -> SEAL -> CLEANUP -> FINAL。",
-        "私有 GitHub 合并和本地只读部署在本轮授权内；云发布、券商和实盘仍需单独授权。",
+        "私有 GitHub 发布、合并、标签和 v0.4 替换都必须等待同一真实运行通过全部 readiness 硬门禁。",
     ])
     return doc
 
